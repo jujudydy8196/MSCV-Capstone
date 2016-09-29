@@ -36,3 +36,7 @@ git clene https://github.com/HzFu/Cosaliency_tip2013.git
 
 #install opencv python 
 wget https://github.com/Itseez/opencv/archive/2.4.11.zip
+
+
+#no libgfortran:
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libgfortran.so.3
