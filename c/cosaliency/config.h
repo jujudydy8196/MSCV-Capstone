@@ -57,7 +57,7 @@ public:
 
         scale=200;
         Bin_num=min(max(2*img_num,10),30);
-       
+        Bin_num_single=6;
     }
 
 };

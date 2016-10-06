@@ -13,11 +13,13 @@ using namespace std;
 using namespace cv;
 using Eigen::MatrixXd;
 
-#define _debug(x) cout << "_debug: " << #x << " : " << x.rows() << "x" << x.cols()  << endl;
+#define _debugSize(x) cout << "_debugSize: " << #x << " : " << x.size() << endl;
+#define _debug(x) cout << "_debug: " << #x << " : " << x << endl << endl;
 config* settings;
 
 void GetImVector(const Mat img, Mat &featureVec, Mat &disVec); 
-MatrixXd SingleSaliencyMain(const vector<MatrixXd>);
+Mat GetSalWeight(const Mat centers, const Mat labels); 
+void GetPositionW(const Mat labels, const Mat disVec); 
 Mat SingleSaliencyMain(const vector<Mat>);
 int main() {
     settings = new config("IMG_5094");
@@ -52,22 +54,69 @@ void GetImVector(const Mat img, Mat &featureVec, Mat &disVec) {
     //cout << featureVec << endl << endl;
     //cout << disVec << endl << endl;
 }
+Mat GetSalWeight(const Mat centers, const Mat labels) {
+    vector<float> bin_weight(settings->Bin_num_single,0);
+    for (int i=0; i<settings->Bin_num_single; i++) {
+        bin_weight[i] = (float)cv::countNonZero(labels==i) / labels.rows;
+        cout << bin_weight[i] << endl;
+        cout << centers.row(i) << endl;
+    }
+    Mat y = Mat::zeros(settings->Bin_num_single, settings->Bin_num_single, CV_32F);
+    for (int i=0; i<settings->Bin_num_single; i++) {
+        for (int j=i; j<settings->Bin_num_single; j++) {
+            y.at<float>(i,j) = y.at<float>(j,i) = norm(centers.row(i)-centers.row(j));
+            y.at<float>(i,j) *= bin_weight[i];
+            y.at<float>(j,i) *= bin_weight[j];
+        }
+    }
+    
+    Mat Sal_weight;
+    reduce(y,Sal_weight,0,CV_REDUCE_SUM, CV_32F);
+    //for (int i=0; i<settings->Bin_num_single; i++) {
+        //for (int j=0; j<settings->Bin_num_single; j++)
+            //cout << Y[i][j] << " " ;
+        //cout << endl;
+    //}
+    //cout << y << endl << endl;
+    //cout << Sal_weight << endl << endl;
+    return Sal_weight;
+}
+void GetPositionW(const Mat labels, const Mat disVec) {
+    Mat disWeight = Mat::zeros(settings->Bin_num_single, 1, CV_32F);
+    Mat c=labels==1;
+    Mat b;
+    c.convertTo(b,CV_8U);
+    cout << b << endl << endl;
+    Mat test;
+    findNonZero(labels==1, test) ;
+    Mat a;
+    a.copyTo(disVec,b);
+    cout << a << endl << endl;
+    cout << countNonZero(a==1) << endl;
+    for (int i=0; i<settings->Bin_num_single; i++) {
+        
+        cout << cv::countNonZero(labels==i) << endl;
+   }
 
+}
 Mat SingleSaliencyMain(const vector<Mat> data) {
     Mat Saliency_Map_single = Mat::zeros(settings->scale, settings->scale * settings->img_num, CV_32F);
     for (Mat img:data) {
         Mat featureVec= Mat::zeros(settings->scale*settings->scale,3,CV_32F);
         Mat disVec = Mat::zeros(settings->scale*settings->scale,1,CV_32F);
         GetImVector(img, featureVec, disVec);
+        _debugSize(featureVec);
+        _debugSize(disVec);
+        cout << featureVec.dims << " " << featureVec.type() << endl;
+        Mat labels, centers;
+        kmeans(featureVec, settings->Bin_num_single, labels, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), 5, KMEANS_PP_CENTERS, centers);
+        _debugSize(labels);
+        _debugSize(centers);
+        Mat Cluster_Map=labels.reshape(0,settings->scale);
+        _debugSize(Cluster_Map);
+        //_debug(Cluster_Map);
+        Mat Sal_weight = GetSalWeight(centers,labels);
+        GetPositionW(labels, disVec);
         break;
     }
 }
-//MatrixXd SingleSaliencyMain(const vector<MatrixXd> data) {
-    //MatrixXd Saliency_Map_single = MatrixXd::Zero(settings->scale, settings->scale * settings->img_num);
-    //_debug(Saliency_Map_single);
-    //for (MatrixXd img:data) {
-        //MatrixXd featureVec, disVec;
-        //GetImVector(img, featureVec, disVec);
-    //}
-    //return Saliency_Map_single ;
-//}

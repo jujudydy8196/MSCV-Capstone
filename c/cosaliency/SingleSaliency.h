@@ -1,3 +1,5 @@
-class SingleSaliency {
-public:
-}
+//class Saliency {
+//public:
+    //void getImVector(img_data, scaleH, scaleW) {
+    //}
+//}
