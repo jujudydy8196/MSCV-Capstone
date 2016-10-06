@@ -23,6 +23,7 @@ Mat GetSalWeight(const Mat centers, const Mat labels);
 Mat GetPositionW(const Mat labels, const Mat disVec); 
 Mat SingleSaliencyMain(const vector<Mat>);
 void Gauss_normal(Mat &input, float center, float sigma ) ;
+Mat Cluster2img(const Mat Cluster_Map, const Mat SaliencyWeight_all) ;
 int main() {
     settings = new config("IMG_5094");
     vector<Mat> data_image_cv;
@@ -45,23 +46,17 @@ void GetImVector(const Mat img, Mat &featureVec, Mat &disVec) {
     Mat img2;
     cvtColor(img, img2, CV_BGR2Lab);
     img2.convertTo(img2, CV_32FC3);
-    //cout << img2.size() << " " << img2.channels() << endl;
     featureVec = img2.reshape(1,settings->scale*settings->scale);
-    //cout << featureVec.size() << " " << featureVec.channels() << endl;
     for (int row=0; row<settings->scale; row++) {
         for (int col=0; col<settings->scale; col++ ) {
             disVec.at<float>(row*settings->scale+col)=round(sqrt(pow(row-settings->scale/2,2)+pow(col-settings->scale/2,2)));
         }
     }
-    //cout << featureVec << endl << endl;
-    //cout << disVec << endl << endl;
 }
 Mat GetSalWeight(const Mat centers, const Mat labels) {
     vector<float> bin_weight(settings->Bin_num_single,0);
     for (int i=0; i<settings->Bin_num_single; i++) {
         bin_weight[i] = (float)cv::countNonZero(labels==i) / labels.rows;
-        cout << bin_weight[i] << endl;
-        cout << centers.row(i) << endl;
     }
     Mat y = Mat::zeros(settings->Bin_num_single, settings->Bin_num_single, CV_32F);
     for (int i=0; i<settings->Bin_num_single; i++) {
@@ -87,7 +82,6 @@ Mat GetPositionW(const Mat labels, const Mat disVec) {
 
         //double x=sum(disVecIdx)[0]/countNonZero(labels==1);
         //disWeight.at<float>(i)=exp(-x*x/(2*settings->scale*settings->scale));
-        //cout << disWeight.at<flaot>(i) << endl;
             //cout << disVecIdx << endl << endl;
         //cout << cv::countNonZero(disVecIdx) << endl;
         //cout << cv::countNonZero(labels==i) << endl;
@@ -102,21 +96,37 @@ void Gauss_normal(Mat &input, float center, float sigma ) {
         input.at<float>(i)=exp(-(x-center)*(x-center)/(2*sigma*sigma));
     }
 }
+Mat Cluster2img(const Mat Cluster_Map, const Mat SaliencyWeight_all) {
+    Mat Saliency_sig_temp = Mat::zeros(settings->scale, settings->scale, CV_32F);
+    //_debug(SaliencyWeight_all);
+    for (int i=0; i<settings->Bin_num_single; i++) {
+        Mat mask=Cluster_Map==i;
+        mask.convertTo(mask, CV_8U, 1.0/255.0);
+        //cout << SaliencyWeight_all.at<float>(i) << endl;
+        Saliency_sig_temp.setTo(SaliencyWeight_all.at<float>(i),mask);
+    }
+    //_debug(Saliency_sig_temp);
+    Mat Saliency_Map_single;
+    GaussianBlur(Saliency_sig_temp, Saliency_Map_single, Size(3,3), 3);
+    //_debug(Saliency_Map_single);
+    return Saliency_Map_single;
+}
 Mat SingleSaliencyMain(const vector<Mat> data) {
     Mat Saliency_Map_single = Mat::zeros(settings->scale, settings->scale * settings->img_num, CV_32F);
-    for (Mat img:data) {
+    for (int i=0; i<settings->img_num; i++) { //Mat img:data
+        Mat img=data[i];
+        //_debug(img);
         Mat featureVec= Mat::zeros(settings->scale*settings->scale,3,CV_32F);
         Mat disVec = Mat::zeros(settings->scale*settings->scale,1,CV_32F);
         GetImVector(img, featureVec, disVec);
-        _debugSize(featureVec);
-        _debugSize(disVec);
-        cout << featureVec.dims << " " << featureVec.type() << endl;
+        //_debugSize(featureVec);
+        //_debugSize(disVec);
         Mat labels, centers;
         kmeans(featureVec, settings->Bin_num_single, labels, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), 5, KMEANS_PP_CENTERS, centers);
-        _debugSize(labels);
-        _debugSize(centers);
+        //_debugSize(labels);
+        //_debugSize(centers);
         Mat Cluster_Map=labels.reshape(0,settings->scale);
-        _debugSize(Cluster_Map);
+        //_debugSize(Cluster_Map);
         //_debug(Cluster_Map);
         Mat Sal_weight = GetSalWeight(centers,labels);
         Mat Dis_weight = GetPositionW(labels, disVec);
@@ -125,7 +135,19 @@ Mat SingleSaliencyMain(const vector<Mat> data) {
         minMaxLoc( Sal_weight, &minVal, &maxVal);
         Gauss_normal(Sal_weight, maxVal, (maxVal-minVal)/2);
         minMaxLoc( Dis_weight, &minVal, &maxVal);
-        break;
+        Gauss_normal(Dis_weight, maxVal, (maxVal-minVal)/2);
+        //_debug(Sal_weight);
+        //_debug(Dis_weight);
+        //_debug(Sal_weight.mul(Dis_weight));
+        Mat SaliencyWeight_all=Sal_weight.mul(Dis_weight);
+        Mat Saliency_sig_final=Cluster2img(Cluster_Map, SaliencyWeight_all);
+        //_debugSize(Saliency_Map_single(Rect(i*settings->scale, 0, settings->scale, settings->scale))); 
+        //cout << countNonZero(Saliency_sig_final) << endl;
+        //Mat mask = Saliency_Map_single(Range::all(), Range(i*settings->scale, (i+1)*settings->scale-1));
+        Saliency_sig_final.copyTo(Saliency_Map_single(Rect(i*settings->scale, 0, settings->scale, settings->scale)));
+        cout << countNonZero(Saliency_Map_single) << endl;
+        //_debug(Saliency_Map_single);
+        //break;
     }
 }
 
