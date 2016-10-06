@@ -22,6 +22,7 @@ void GetImVector(const Mat img, Mat &featureVec, Mat &disVec);
 Mat GetSalWeight(const Mat centers, const Mat labels); 
 Mat GetPositionW(const Mat labels, const Mat disVec); 
 Mat SingleSaliencyMain(const vector<Mat>);
+void Gauss_normal(Mat &input, float center, float sigma ) ;
 int main() {
     settings = new config("IMG_5094");
     vector<Mat> data_image_cv;
@@ -73,7 +74,7 @@ Mat GetSalWeight(const Mat centers, const Mat labels) {
     
     Mat Sal_weight;
     reduce(y,Sal_weight,0,CV_REDUCE_SUM, CV_32F);
-    return Sal_weight;
+    return Sal_weight.t();
 }
 Mat GetPositionW(const Mat labels, const Mat disVec) {
     Mat disWeight = Mat::zeros(settings->Bin_num_single, 1, CV_32F);
@@ -82,15 +83,24 @@ Mat GetPositionW(const Mat labels, const Mat disVec) {
         mask.convertTo(mask,CV_8U,1.0/255.0);
         Mat disVecIdx;
         disVec.copyTo(disVecIdx,mask);
-        double x=sum(disVecIdx)[0]/countNonZero(labels==1);
-        disWeight.at<float>(i)=exp(-x*x/(2*settings->scale*settings->scale));
+        disWeight.at<float>(i)=sum(disVecIdx)[0]/countNonZero(labels==1);
+
+        //double x=sum(disVecIdx)[0]/countNonZero(labels==1);
+        //disWeight.at<float>(i)=exp(-x*x/(2*settings->scale*settings->scale));
         //cout << disWeight.at<flaot>(i) << endl;
             //cout << disVecIdx << endl << endl;
         //cout << cv::countNonZero(disVecIdx) << endl;
         //cout << cv::countNonZero(labels==i) << endl;
-   }
+    }
+    Gauss_normal(disWeight,0,settings->scale);
    return disWeight;
 
+}
+void Gauss_normal(Mat &input, float center, float sigma ) {
+    for (int i=0; i<input.rows; i++) {
+        float x=input.at<float>(i);
+        input.at<float>(i)=exp(-(x-center)*(x-center)/(2*sigma*sigma));
+    }
 }
 Mat SingleSaliencyMain(const vector<Mat> data) {
     Mat Saliency_Map_single = Mat::zeros(settings->scale, settings->scale * settings->img_num, CV_32F);
@@ -110,8 +120,12 @@ Mat SingleSaliencyMain(const vector<Mat> data) {
         //_debug(Cluster_Map);
         Mat Sal_weight = GetSalWeight(centers,labels);
         Mat Dis_weight = GetPositionW(labels, disVec);
-        _debug(Dis_weight);
-        _debug(Sal_weight);
+        
+        double minVal,maxVal;
+        minMaxLoc( Sal_weight, &minVal, &maxVal);
+        Gauss_normal(Sal_weight, maxVal, (maxVal-minVal)/2);
+        minMaxLoc( Dis_weight, &minVal, &maxVal);
         break;
     }
 }
+
