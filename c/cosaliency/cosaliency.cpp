@@ -7,6 +7,7 @@
 #include <opencv2/core/eigen.hpp>
 #include "config.h"
 #include <ctime>
+#include <math.h>
 //#include "SingleSaliency.h"
 
 using namespace std;
@@ -19,7 +20,7 @@ config* settings;
 
 void GetImVector(const Mat img, Mat &featureVec, Mat &disVec); 
 Mat GetSalWeight(const Mat centers, const Mat labels); 
-void GetPositionW(const Mat labels, const Mat disVec); 
+Mat GetPositionW(const Mat labels, const Mat disVec); 
 Mat SingleSaliencyMain(const vector<Mat>);
 int main() {
     settings = new config("IMG_5094");
@@ -72,31 +73,23 @@ Mat GetSalWeight(const Mat centers, const Mat labels) {
     
     Mat Sal_weight;
     reduce(y,Sal_weight,0,CV_REDUCE_SUM, CV_32F);
-    //for (int i=0; i<settings->Bin_num_single; i++) {
-        //for (int j=0; j<settings->Bin_num_single; j++)
-            //cout << Y[i][j] << " " ;
-        //cout << endl;
-    //}
-    //cout << y << endl << endl;
-    //cout << Sal_weight << endl << endl;
     return Sal_weight;
 }
-void GetPositionW(const Mat labels, const Mat disVec) {
+Mat GetPositionW(const Mat labels, const Mat disVec) {
     Mat disWeight = Mat::zeros(settings->Bin_num_single, 1, CV_32F);
-    Mat c=labels==1;
-    Mat b;
-    c.convertTo(b,CV_8U);
-    cout << b << endl << endl;
-    Mat test;
-    findNonZero(labels==1, test) ;
-    Mat a;
-    a.copyTo(disVec,b);
-    cout << a << endl << endl;
-    cout << countNonZero(a==1) << endl;
     for (int i=0; i<settings->Bin_num_single; i++) {
-        
-        cout << cv::countNonZero(labels==i) << endl;
+        Mat mask=labels==i;
+        mask.convertTo(mask,CV_8U,1.0/255.0);
+        Mat disVecIdx;
+        disVec.copyTo(disVecIdx,mask);
+        double x=sum(disVecIdx)[0]/countNonZero(labels==1);
+        disWeight.at<float>(i)=exp(-x*x/(2*settings->scale*settings->scale));
+        //cout << disWeight.at<flaot>(i) << endl;
+            //cout << disVecIdx << endl << endl;
+        //cout << cv::countNonZero(disVecIdx) << endl;
+        //cout << cv::countNonZero(labels==i) << endl;
    }
+   return disWeight;
 
 }
 Mat SingleSaliencyMain(const vector<Mat> data) {
@@ -116,7 +109,9 @@ Mat SingleSaliencyMain(const vector<Mat> data) {
         _debugSize(Cluster_Map);
         //_debug(Cluster_Map);
         Mat Sal_weight = GetSalWeight(centers,labels);
-        GetPositionW(labels, disVec);
+        Mat Dis_weight = GetPositionW(labels, disVec);
+        _debug(Dis_weight);
+        _debug(Sal_weight);
         break;
     }
 }
