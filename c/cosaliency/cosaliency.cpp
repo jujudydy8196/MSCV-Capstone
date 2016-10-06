@@ -33,14 +33,12 @@ int main() {
         resize(m,m,Size(settings->scale, settings->scale), INTER_CUBIC);
         data_image_cv.push_back(m);
     }
+    //clock_t begin=clock();
     SingleSaliencyMain(data_image_cv);
+    //clock_t end=clock();
+    //cout << double(end-begin)/(double)CLOCKS_PER_SEC << endl;
 }
 
-//MatrixXd colorspace(const MatrixXd img) {
-    //MatrixXd resImg; //RGB->Lab
-    //Vector3d v << 0.950456 << 1 << 1.088754 ;
-
-//}
 void GetImVector(const Mat img, Mat &featureVec, Mat &disVec) {
     //imshow("img1",img);
     Mat img2;
@@ -80,11 +78,6 @@ Mat GetPositionW(const Mat labels, const Mat disVec) {
         disVec.copyTo(disVecIdx,mask);
         disWeight.at<float>(i)=sum(disVecIdx)[0]/countNonZero(labels==1);
 
-        //double x=sum(disVecIdx)[0]/countNonZero(labels==1);
-        //disWeight.at<float>(i)=exp(-x*x/(2*settings->scale*settings->scale));
-            //cout << disVecIdx << endl << endl;
-        //cout << cv::countNonZero(disVecIdx) << endl;
-        //cout << cv::countNonZero(labels==i) << endl;
     }
     Gauss_normal(disWeight,0,settings->scale);
    return disWeight;
@@ -145,9 +138,10 @@ Mat SingleSaliencyMain(const vector<Mat> data) {
         //cout << countNonZero(Saliency_sig_final) << endl;
         //Mat mask = Saliency_Map_single(Range::all(), Range(i*settings->scale, (i+1)*settings->scale-1));
         Saliency_sig_final.copyTo(Saliency_Map_single(Rect(i*settings->scale, 0, settings->scale, settings->scale)));
-        cout << countNonZero(Saliency_Map_single) << endl;
+        //cout << countNonZero(Saliency_Map_single) << endl;
         //_debug(Saliency_Map_single);
         //break;
     }
+
 }
 
