@@ -26,31 +26,48 @@ void Gauss_normal(Mat &input, float center, float sigma ) ;
 Mat Cluster2img(const Mat &Cluster_Map, const Mat &SaliencyWeight_all, const int bin_num) ;
 Mat CoSaliencyMain(const vector<Mat> &data); 
 Mat GetCoWeight( const Mat &labels ); 
+void saveResult(const Mat &result, const Size imsize); 
 int main() {
-    settings = new config("IMG_5094");
+    settings = new config();
+    Size imsize;
     vector<Mat> data_image_cv;
     for (string fileName : settings->files_list) {
         Mat m=imread((settings->img_path+fileName).c_str(),1);
+        imsize=m.size();
         //m.convertTo(m, CV_32FC3);
         resize(m,m,Size(settings->scale, settings->scale), INTER_CUBIC);
         data_image_cv.push_back(m);
     }
     Mat result_sig_map = SingleSaliencyMain(data_image_cv);
-    imwrite( "single.png", result_sig_map*255 );
+    //_debug(result_sig_map);
+    //imwrite( "single.png", result_sig_map*255 );
     Mat result_cos_map = CoSaliencyMain(data_image_cv);
     Mat result = result_sig_map.mul(result_cos_map);
-    _debug(result);
-    imwrite( "cos.png", result_cos_map*255 );
-    imwrite( "result.png", result*255 );
+    saveResult(result,imsize);
+    //_debug(result);
+    //imwrite( "cos.png", result_cos_map*255 );
+    //imwrite( "result.png", result*255 );
+}
+void saveResult(const Mat &result, const Size imsize) {
+    for (int i=0; i<settings->img_num; i++) {
+        Mat r= result(Rect(settings->scale*i, 0, settings->scale, settings->scale));
+        resize(r,r,imsize, INTER_CUBIC);
+        imwrite(settings->result_path+settings->files_list[i].substr(0,3)+"_cosaliency.png", r*255);
+    }
 }
 void GetImVector(const Mat &img, Mat &featureVec, Mat &disVec) {
     Mat img2;
     cvtColor(img, img2, CV_BGR2Lab);
-    img2.convertTo(img2, CV_32F, 1.0/255.0);
+    //_debug(img2);
+    img2.convertTo(img2, CV_32F);//, 1.0/255.0);
     featureVec = img2.reshape(1,settings->scale*settings->scale);
+    featureVec.col(0)= featureVec.col(0).mul(100/255.0);
+    featureVec.col(1) -= 128;
+    featureVec.col(2) -= 128;
+    //_debug(featureVec);
     for (int row=0; row<settings->scale; row++) {
         for (int col=0; col<settings->scale; col++ ) {
-            disVec.at<float>(row*settings->scale+col)=round(sqrt(pow(row-settings->scale/2,2)+pow(col-settings->scale/2,2)));
+            disVec.at<float>(row*settings->scale+col)=round(sqrt(pow((row+1)-settings->scale/2,2)+pow((col+1)-settings->scale/2,2)));
         }
     }
 }
@@ -100,15 +117,14 @@ Mat GetCoWeight( const Mat &labels ) {
 Mat GetPositionW(const Mat labels, const Mat disVec, int bin_num) {
     Mat disWeight = Mat::zeros(bin_num, 1, CV_32F);
     for (int i=0; i<bin_num; i++) {
-        Mat mask=labels==i;
-        mask.convertTo(mask,CV_8U,1.0/255.0);
+        Mat mask= labels==i;
+        mask.convertTo(mask, CV_8U, 1.0/255.0);
         Mat disVecIdx;
-        disVec.copyTo(disVecIdx,mask);
+        disVec.copyTo(disVecIdx, mask);
         disWeight.at<float>(i)=sum(disVecIdx)[0]/countNonZero(labels==i);
-
     }
     Gauss_normal(disWeight,0,settings->scale);
-   return disWeight;
+    return disWeight;
 
 }
 void Gauss_normal(Mat &input, float center, float sigma ) {
@@ -121,7 +137,6 @@ Mat Cluster2img(const Mat &Cluster_Map, const Mat &SaliencyWeight_all, const int
     Mat Saliency_sig_temp = Mat(Cluster_Map.size(), CV_32F); //Cluster_Map; //Mat::zeros(settings->scale, settings->scale, CV_32F);
     //_debug(Cluster_Map);
     //_debugSize(SaliencyWeight_all);
-
     for (int i=0; i<bin_num; i++) {
         Mat mask= Cluster_Map==i;
         //_debug(mask);
@@ -139,12 +154,15 @@ Mat SingleSaliencyMain(const vector<Mat> &data) {
     Mat Saliency_Map_single = Mat::zeros(settings->scale, settings->scale * settings->img_num, CV_32F);
     for (int i=0; i<settings->img_num; i++) { //Mat img:data
         Mat img=data[i];
+        //vector<Mat> ch(3);
+        //split(img,ch);
+        //_debug(ch[0]);
         //_debug(img);
         Mat featureVec= Mat::zeros(settings->scale*settings->scale,3,CV_32F);
         Mat disVec = Mat::zeros(settings->scale*settings->scale,1,CV_32F);
         GetImVector(img, featureVec, disVec);
         //_debugSize(featureVec);
-        //_debugSize(disVec);
+        //_debug(featureVec);
         Mat labels, centers;
         kmeans(featureVec, settings->Bin_num_single, labels, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 10000, 0.0001), 5, KMEANS_PP_CENTERS, centers);
         //_debugSize(labels);
@@ -195,7 +213,7 @@ Mat CoSaliencyMain(const vector<Mat> &data) {
     }
     //Mat Cluster_Map=labels.reshape(0,settings->scale);
     imwrite("cluster.png", Cluster_Map/settings->Bin_num*255);
-    _debugSize(labels);
+    //_debugSize(labels);
     Mat Sal_weight_co = GetSalWeight(centers,labels);
     Mat Dis_weight_co = GetPositionW(labels, All_disVector, settings->Bin_num);
     Mat co_weight_co = GetCoWeight(labels);

@@ -26,11 +26,11 @@ public:
     // clustering number on single-image
     int Bin_num_single;
 
-    config(string video) {
-        img_set_name = video;
+    config() {
+        img_set_name = "IMG_5094";
         dir_name = "/home/judy/capstone/DATA/";
         img_path = dir_name + "frame/" + img_set_name +"/";
-        result_path = dir_name + "test/" ; //"cosalient/" + img_set_name + "/";
+        result_path = dir_name + "c_cosalient/" + img_set_name + "/";
         struct stat st = {0};
         if (stat(result_path.c_str(), &st) == -1) {
                 mkdir(result_path.c_str(), 0777);
