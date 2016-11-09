@@ -6,16 +6,18 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include <opencv2/core/eigen.hpp>
 #include "config.h"
-#include <ctime>
+#include <time.h>
 #include <math.h>
+#include <chrono>
 //#include "SingleSaliency.h"
 
 using namespace std;
 using namespace cv;
-using Eigen::MatrixXd;
+using namespace std::chrono;
 
 #define _debugSize(x) cout << "_debugSize: " << #x << " : " << x.size() << endl;
 #define _debug(x) cout << "_debug: " << #x << " : " << x << endl << endl;
+#define _debugTime(start,end,s) cout << s << " takes " << duration_cast<std::chrono::milliseconds>(end-start).count() << " ms" << endl;
 config* settings;
 
 void GetImVector(const Mat &img, Mat &featureVec, Mat &disVec); 
@@ -28,8 +30,13 @@ Mat CoSaliencyMain(const vector<Mat> &data);
 Mat GetCoWeight( const Mat &labels ); 
 void saveResult(const Mat &result, const Size imsize); 
 int main() {
+    auto totalstart=high_resolution_clock::now();
+    auto start=high_resolution_clock::now();
     settings = new config();
+    auto end=high_resolution_clock::now();
+    _debugTime(start,end,"config");
     Size imsize;
+    start = high_resolution_clock::now();
     vector<Mat> data_image_cv;
     for (string fileName : settings->files_list) {
         Mat m=imread((settings->img_path+fileName).c_str(),1);
@@ -38,12 +45,27 @@ int main() {
         resize(m,m,Size(settings->scale, settings->scale), INTER_CUBIC);
         data_image_cv.push_back(m);
     }
+    end = high_resolution_clock::now();
+    _debugTime(start,end,"initialize data");
+    start = high_resolution_clock::now();
     Mat result_sig_map = SingleSaliencyMain(data_image_cv);
+    end = high_resolution_clock::now();
+    _debugTime(start,end,"Single saliency");
+    start = high_resolution_clock::now();
     //_debug(result_sig_map);
     //imwrite( "single.png", result_sig_map*255 );
     Mat result_cos_map = CoSaliencyMain(data_image_cv);
+    end = high_resolution_clock::now();
+    _debugTime(start,end,"Co saliency");
+    start = high_resolution_clock::now();
     Mat result = result_sig_map.mul(result_cos_map);
     saveResult(result,imsize);
+    end = high_resolution_clock::now();
+
+    _debugTime(start,end,"save result");
+
+    auto totalend= high_resolution_clock::now();
+    _debugTime(totalstart,totalend,"total");
     //_debug(result);
     //imwrite( "cos.png", result_cos_map*255 );
     //imwrite( "result.png", result*255 );
