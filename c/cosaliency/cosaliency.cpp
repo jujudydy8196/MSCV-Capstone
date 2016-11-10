@@ -1,10 +1,5 @@
 #include <stdio.h>
 #include <iostream>
-#include <Eigen/Dense>
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include "opencv2/imgproc/imgproc.hpp"
-#include <opencv2/core/eigen.hpp>
 #include "config.h"
 #include <time.h>
 #include <math.h>
@@ -12,54 +7,58 @@
 //#include "SingleSaliency.h"
 
 using namespace std;
-using namespace cv;
+//using namespace cv;
 using namespace std::chrono;
 
 #define _debugSize(x) cout << "_debugSize: " << #x << " : " << x.size() << endl;
 #define _debug(x) cout << "_debug: " << #x << " : " << x << endl << endl;
 #define _debugTime(start,end,s) cout << s << " takes " << duration_cast<std::chrono::milliseconds>(end-start).count() << " ms" << endl;
-config* settings;
+cosal_config* settings;
 
 void GetImVector(const Mat &img, Mat &featureVec, Mat &disVec); 
 Mat GetSalWeight(const Mat &centers, const Mat &labels); 
 Mat GetPositionW(const Mat &labels, const Mat &disVec); 
-Mat SingleSaliencyMain(const vector<Mat> &);
+Mat SingleSaliencyMain();
+//Mat SingleSaliencyMain(const vector<Mat> &);
 void Gauss_normal(Mat &input, float center, float sigma ) ;
 Mat Cluster2img(const Mat &Cluster_Map, const Mat &SaliencyWeight_all, const int bin_num) ;
-Mat CoSaliencyMain(const vector<Mat> &data); 
+Mat CoSaliencyMain(); 
+//Mat CoSaliencyMain(const vector<Mat> &data); 
 Mat GetCoWeight( const Mat &labels ); 
-void saveResult(const Mat &result, const Size imsize); 
+void saveResult(const Mat &result); 
+//void saveResult(const Mat &result, const Size imsize); 
 int main() {
     auto totalstart=high_resolution_clock::now();
     auto start=high_resolution_clock::now();
-    settings = new config();
+    settings = new cosal_config();
     auto end=high_resolution_clock::now();
     _debugTime(start,end,"config");
-    Size imsize;
     start = high_resolution_clock::now();
-    vector<Mat> data_image_cv;
-    for (string fileName : settings->files_list) {
-        Mat m=imread((settings->img_path+fileName).c_str(),1);
-        imsize=m.size();
-        //m.convertTo(m, CV_32FC3);
-        resize(m,m,Size(settings->scale, settings->scale), INTER_CUBIC);
-        data_image_cv.push_back(m);
-    }
+    //vector<Mat> data_image_cv;
+    //for (string fileName : settings->files_list) {
+        //Mat m=imread((settings->img_path+fileName).c_str(),1);
+        //imsize=m.size();
+        ////m.convertTo(m, CV_32FC3);
+        //resize(m,m,Size(settings->scale, settings->scale), INTER_CUBIC);
+        //data_image_cv.push_back(m);
+    //}
     end = high_resolution_clock::now();
     _debugTime(start,end,"initialize data");
     start = high_resolution_clock::now();
-    Mat result_sig_map = SingleSaliencyMain(data_image_cv);
+    Mat result_sig_map = SingleSaliencyMain();
+    //Mat result_sig_map = SingleSaliencyMain(settings->data_image_cv);
     end = high_resolution_clock::now();
     _debugTime(start,end,"Single saliency");
     start = high_resolution_clock::now();
     //_debug(result_sig_map);
     //imwrite( "single.png", result_sig_map*255 );
-    Mat result_cos_map = CoSaliencyMain(data_image_cv);
+    Mat result_cos_map = CoSaliencyMain();
+    //Mat result_cos_map = CoSaliencyMain(settings->data_image_cv);
     end = high_resolution_clock::now();
     _debugTime(start,end,"Co saliency");
     start = high_resolution_clock::now();
     Mat result = result_sig_map.mul(result_cos_map);
-    saveResult(result,imsize);
+    saveResult(result);
     end = high_resolution_clock::now();
 
     _debugTime(start,end,"save result");
@@ -70,10 +69,11 @@ int main() {
     //imwrite( "cos.png", result_cos_map*255 );
     //imwrite( "result.png", result*255 );
 }
-void saveResult(const Mat &result, const Size imsize) {
+void saveResult(const Mat &result) {
+//void saveResult(const Mat &result, const Size imsize) {
     for (int i=0; i<settings->img_num; i++) {
         Mat r= result(Rect(settings->scale*i, 0, settings->scale, settings->scale));
-        resize(r,r,imsize, INTER_CUBIC);
+        resize(r,r,settings->imsize, INTER_CUBIC);
         imwrite(settings->result_path+settings->files_list[i].substr(0,3)+"_cosaliency.png", r*255);
     }
 }
@@ -172,10 +172,11 @@ Mat Cluster2img(const Mat &Cluster_Map, const Mat &SaliencyWeight_all, const int
     //_debugSize(Saliency_Map_single);
     return Saliency_Map_single;
 }
-Mat SingleSaliencyMain(const vector<Mat> &data) {
+Mat SingleSaliencyMain() {
+//Mat SingleSaliencyMain(const vector<Mat> &data) {
     Mat Saliency_Map_single = Mat::zeros(settings->scale, settings->scale * settings->img_num, CV_32F);
     for (int i=0; i<settings->img_num; i++) { //Mat img:data
-        Mat img=data[i];
+        Mat img=settings->cosalImgs[i];
         //vector<Mat> ch(3);
         //split(img,ch);
         //_debug(ch[0]);
@@ -214,10 +215,11 @@ Mat SingleSaliencyMain(const vector<Mat> &data) {
 
 }
 
-Mat CoSaliencyMain(const vector<Mat> &data) {
+Mat CoSaliencyMain() {
+//Mat CoSaliencyMain(const vector<Mat> &data) {
     Mat All_vector, All_disVector;
     for (int i=0; i<settings->img_num; i++) {
-        Mat img=data[i];
+        Mat img=settings->cosalImgs[i];
         Mat featureVec= Mat::zeros(settings->scale*settings->scale,3,CV_32F);
         Mat disVec = Mat::zeros(settings->scale*settings->scale,1,CV_32F);
         GetImVector(img, featureVec, disVec);
