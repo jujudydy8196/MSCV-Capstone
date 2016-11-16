@@ -8,10 +8,13 @@ class base: public Config{
     public:
         string cropFolder;
         int gridSize;
+        int n_gmm, n_pca;
         vector<vector<Mat>> crops;
         base() {
-            cout << "init base class" << endl;
+            //cout << "init base class" << endl;
             gridSize=120;
+            n_gmm=12;
+            n_pca=64;
             //imgFolder="/home/judy/capstone/DATA/frame/";
             cropFolder= dir_name + "c_crop/" + img_set_name + "/";
             struct stat st = {0};
@@ -19,10 +22,10 @@ class base: public Config{
                 cout << "make dir " << cropFolder << endl;
                 mkdir(cropFolder.c_str(), 0777);
             }
-            cout << "done base class" << endl;
+            //cout << "done base class" << endl;
         }
     void crop () {
-        cout << "start crop" << endl;
+        //cout << "start crop" << endl;
         int w=orgSize.width/gridSize;
         int h=orgSize.height/gridSize;
         for (int i=0; i<img_num; i++) {
@@ -37,8 +40,8 @@ class base: public Config{
             }
             for (int ww=0; ww< w ; ww++) {
                 for (int hh=0; hh< h; hh++) {
-                    if (i==0 && ww==w-1 && hh==h-1)
-                        continue;
+                    //if (i==0 && ww==w-1 && hh==h-1)
+                        //continue;
                     stringstream ss;
                     ss << setw(3) << setfill('0') << ww*h+hh;
                     string fileName=ss.str();

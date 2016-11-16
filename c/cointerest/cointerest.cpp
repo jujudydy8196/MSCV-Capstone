@@ -1,10 +1,20 @@
 #include<iostream>
 #include "base.h"
 #include <opencv2/nonfree/nonfree.hpp>
+
+extern "C" {
+  #include <../src/vlfeat/vl/generic.h>
+  //#include <../src/vlfeat/vl/dsift.h>
+  #include <../src/vlfeat/vl/gmm.h>
+  #include <../src/vlfeat/vl/fisher.h>
+  //#include <../src/vlfeat/vl/svm.h>
+}
 using namespace std;
 base* b;
 void db2fv(); 
 Mat extract_denseSift(const Mat& img); 
+void learn_gmm(const Mat& feat); 
+void convVec2Mat(const vector<vector<Mat>>& sift, Mat& feat); 
 int main() {
    initModule_nonfree();
    b=new base();
@@ -15,15 +25,26 @@ int main() {
 void db2fv() {
     vector<vector<Mat>> sift;
     for (vector<Mat> crop: b->crops) {
-        //_debugSize(crop);
         //TODO: parallel
         vector<Mat> tmp;
         for (Mat img:crop) 
             tmp.push_back(extract_denseSift(img));
-        //_debugSize(tmp);
         sift.push_back(tmp);
+            //feat.push_back(extract_denseSift(img));
     }
-    //_debugSize(sift);
+    
+    Mat feat;
+    _debugSize(feat);
+    convVec2Mat(sift,feat);
+    _debugSize(feat);
+    learn_gmm(feat);
+}
+void convVec2Mat(const vector<vector<Mat>>& sift, Mat& feat) {
+    for (vector<Mat> vec:sift) {
+        for (Mat f:vec)
+            feat.push_back(f);
+    }
+
 }
 Mat extract_denseSift(const Mat& img) {
     Mat img_gray;
@@ -60,5 +81,32 @@ Mat extract_denseSift(const Mat& img) {
     descriptors /= rowSum;
     //_debug(descriptors.row(0));
     return descriptors;
-    
+}
+
+void learn_gmm(const Mat& feat) {
+    int n_pca = b->n_pca;
+    int n_gmm = b->n_gmm;
+    Mat feat_;
+    if (feat.rows > n_gmm*1000) {
+        vector<int> seeds;
+        for (int cont = 0; cont < feat.rows; cont++)
+            seeds.push_back(cont);
+        randShuffle(seeds);
+        for (int i=0; i<n_gmm*1000; i++)
+            feat_.push_back(feat.row(seeds[i]));
+    }
+    else
+        feat.copyTo(feat_);
+    _debugSize(feat_);
+    PCA pca(feat_, Mat(), CV_PCA_DATA_AS_COL, n_pca);
+    pca.eigenvectors.copyTo(feat_);
+    transpose(feat_,feat_);
+    _debugSize(feat_);
+
+    vl_size dimension = feat_.cols;  
+    VlGMM* gmm = vl_gmm_new (VL_TYPE_DOUBLE, dimension, n_gmm) ;
+    vl_gmm_set_max_num_iterations (gmm, 30) ;
+    vl_gmm_set_initialization (gmm,VlGMMKMeans);
+    cout << "dim: " << dimension << endl;
+    //_debug(pca.eigenvectors);
 }
