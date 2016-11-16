@@ -1,7 +1,7 @@
 #include<iostream>
 #include "base.h"
 #include <opencv2/nonfree/nonfree.hpp>
-
+#include <eigen3/Eigen/Dense>
 extern "C" {
   #include <../src/vlfeat/vl/generic.h>
   //#include <../src/vlfeat/vl/dsift.h>
@@ -34,7 +34,6 @@ void db2fv() {
     }
     
     Mat feat;
-    _debugSize(feat);
     convVec2Mat(sift,feat);
     _debugSize(feat);
     learn_gmm(feat);
@@ -103,10 +102,16 @@ void learn_gmm(const Mat& feat) {
     transpose(feat_,feat_);
     _debugSize(feat_);
 
+    Mat *featPtr = &feat_;
     vl_size dimension = feat_.cols;  
     VlGMM* gmm = vl_gmm_new (VL_TYPE_DOUBLE, dimension, n_gmm) ;
     vl_gmm_set_max_num_iterations (gmm, 30) ;
     vl_gmm_set_initialization (gmm,VlGMMKMeans);
     cout << "dim: " << dimension << endl;
+    cout << feat_.total() << endl;
+    float* data = (float*)feat_.data;
+    vl_gmm_cluster (gmm, data, feat_.rows);
+    //cout << vl_gmm_get_means(gmm) << endl;
+    cout << Eigen::Map<Eigen::MatrixXd>( (double*) vl_gmm_get_means(gmm), 1, dimension*n_gmm) << endl;
     //_debug(pca.eigenvectors);
 }
