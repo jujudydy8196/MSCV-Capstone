@@ -16,7 +16,7 @@ Mat extract_denseSift(const Mat& img);
 PCA learn_gmm(const Mat& feat, VlGMM* &); 
 void convVec2Mat(const vector<vector<Mat>>& sift, Mat& feat); 
 Mat generate_FV (const vector<Mat> &feat, const VlGMM* gmm, const PCA &pca) ;
-void db2cosal() ;
+vector<vector<float>>db2cosal() ;
 
 int main() {
    initModule_nonfree();
@@ -49,11 +49,12 @@ vector<Mat> db2fv() {
     }
     return Fvs;
 }
-void db2cosal() {
+vector<vector<float>> db2cosal() {
     float grayMax=0.0;
+    vector<vector<float>> cropss;
     for (int i=0; i<b->img_num; i++) {
         string fileName= b->cosal_path+b->files_list[i].substr(0,3)+"_cosaliency.png";
-        //cout << fileName << endl;
+        cout << fileName << endl;
         Mat im=imread(fileName.c_str(),1);
         Mat im_gray;
         cvtColor(im, im_gray, CV_BGR2GRAY);
@@ -65,11 +66,21 @@ void db2cosal() {
             for (int j=0; j<h; j++ ){
                 Mat crop = im_gray(Rect(i*b->gridSize,j*b->gridSize,b->gridSize,b->gridSize));
                 //cout <<"mean: " << mean(crop) << endl;
-                crops.push_back(mean(crop)[0]);
-                grayMax = max(grayMax, mean(crop)[0]);
+                crops.push_back((float)mean(crop).val[0]);
+                grayMax = max(grayMax, (float)mean(crop).val[0]);
             }
         }
+        cropss.push_back(crops);
     }
+    cout << "grayMax " << grayMax << endl;
+    for (auto &crop:cropss) {
+        for (float &c:crop) {
+            //cout << "before: " << c << " ";
+            c/=grayMax;
+            //cout << "after: " << c << endl;
+        }
+    }
+    return cropss;
 }
 void convVec2Mat(const vector<vector<Mat>>& sift, Mat& feat) {
     for (vector<Mat> vec:sift) {
