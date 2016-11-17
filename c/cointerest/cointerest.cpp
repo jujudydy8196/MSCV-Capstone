@@ -143,6 +143,8 @@ Mat generate_FV (const vector<Mat> &feats, const VlGMM* gmm, const PCA &pca) {
     vl_size numData = feats[0].rows;
     //cout << "dim " << dim << " nclusters: " << nClusters << endl;
     for (Mat feat : feats) {
+    //for (int i=0; i<2; i++) {
+        //Mat feat = feats[i];
         //_debugSize(pca.project(feat));
         float* enc = (float*)vl_malloc(sizeof(float) * 2 * dim * nClusters);
 		vl_fisher_encode( enc, VL_TYPE_FLOAT,
@@ -155,6 +157,19 @@ Mat generate_FV (const vector<Mat> &feats, const VlGMM* gmm, const PCA &pca) {
         Fv.push_back(fv);
         vl_free(enc);
     }
-    _debugSize(Fv);
+    //_debug(Fv);
+    Mat sign;
+    divide(Fv, abs(Fv), sign);
+    //_debug(sign);
+    sqrt(abs(Fv),Fv);
+    multiply(Fv,sign,Fv);
+    Mat tmp;
+    pow(Fv,2,tmp);
+    reduce(tmp, tmp, 1, CV_REDUCE_SUM);
+    sqrt(tmp,tmp);
+    tmp += 0.00001;
+    repeat(tmp,1,Fv.cols,tmp);
+    Fv /= tmp;
+    //_debug(Fv);
     return Fv;
 }
