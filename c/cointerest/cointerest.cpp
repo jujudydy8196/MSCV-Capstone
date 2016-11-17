@@ -11,29 +11,22 @@ extern "C" {
 }
 using namespace std;
 base* b;
-void db2fv(); 
+vector<Mat> db2fv(); 
 Mat extract_denseSift(const Mat& img); 
 PCA learn_gmm(const Mat& feat, VlGMM* &); 
 void convVec2Mat(const vector<vector<Mat>>& sift, Mat& feat); 
 Mat generate_FV (const vector<Mat> &feat, const VlGMM* gmm, const PCA &pca) ;
+void db2cosal() ;
 
-
-struct gmmModel
-{
-  Mat  means;
-  Mat  covs;
-  Mat  priors;
-  int Nclusters;
-  int dimension;
-};
 int main() {
    initModule_nonfree();
    b=new base();
    b->crop();
-   db2fv();
+   vector<Mat> FVs = db2fv();
+   db2cosal();
 }
 
-void db2fv() {
+vector<Mat> db2fv() {
     vector<vector<Mat>> sift;
     for (vector<Mat> crop: b->crops) {
         //TODO: parallel
@@ -53,6 +46,29 @@ void db2fv() {
     vector<Mat> Fvs;
     for (int i=0; i<sift.size(); i++) {
        Fvs.push_back(generate_FV(sift[i], gmm, pca)); 
+    }
+    return Fvs;
+}
+void db2cosal() {
+    float grayMax=0.0;
+    for (int i=0; i<b->img_num; i++) {
+        string fileName= b->cosal_path+b->files_list[i].substr(0,3)+"_cosaliency.png";
+        //cout << fileName << endl;
+        Mat im=imread(fileName.c_str(),1);
+        Mat im_gray;
+        cvtColor(im, im_gray, CV_BGR2GRAY);
+        //cout << b->imsize << endl;
+        int w = b->orgSize.width / b->gridSize;
+        int h = b->orgSize.height / b->gridSize;
+        vector<float> crops;
+        for (int i=0; i<w; i++) {
+            for (int j=0; j<h; j++ ){
+                Mat crop = im_gray(Rect(i*b->gridSize,j*b->gridSize,b->gridSize,b->gridSize));
+                //cout <<"mean: " << mean(crop) << endl;
+                crops.push_back(mean(crop)[0]);
+                grayMax = max(grayMax, mean(crop)[0]);
+            }
+        }
     }
 }
 void convVec2Mat(const vector<vector<Mat>>& sift, Mat& feat) {
@@ -170,6 +186,6 @@ Mat generate_FV (const vector<Mat> &feats, const VlGMM* gmm, const PCA &pca) {
     tmp += 0.00001;
     repeat(tmp,1,Fv.cols,tmp);
     Fv /= tmp;
-    //_debug(Fv);
+    //_debugSize(Fv);
     return Fv;
 }
