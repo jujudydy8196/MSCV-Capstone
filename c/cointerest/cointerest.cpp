@@ -122,16 +122,16 @@ PCA learn_gmm(const Mat& feat, VlGMM* &gmm) {
 
     Mat *featPtr = &feat_;
     vl_size dimension = feat_.cols;  
-    gmm = vl_gmm_new (VL_TYPE_DOUBLE, dimension, n_gmm) ;
+    gmm = vl_gmm_new (VL_TYPE_FLOAT, dimension, n_gmm) ;
     vl_gmm_set_max_num_iterations (gmm, 30) ;
     vl_gmm_set_initialization (gmm,VlGMMKMeans);
-    cout << feat_.total() << endl;
+    //cout << feat_.total() << endl;
     float* data = (float*)feat_.data;
     vl_gmm_cluster (gmm, data, feat_.rows);
 
     
     //cout << vl_gmm_get_means(gmm) << endl;
-    //cout << Eigen::Map<Eigen::MatrixXd>( (double*) vl_gmm_get_means(gmm), 1, dimension*n_gmm) << endl;
+    //cout << Eigen::Map<Eigen::MatrixXd>( (double*) vl_gmm_get_priors(gmm), 1, n_gmm) << endl;
     //_debug(pca.eigenvectors);
     return pca;
 }
@@ -145,19 +145,15 @@ Mat generate_FV (const vector<Mat> &feats, const VlGMM* gmm, const PCA &pca) {
     for (Mat feat : feats) {
         //_debugSize(pca.project(feat));
         float* enc = (float*)vl_malloc(sizeof(float) * 2 * dim * nClusters);
-        cout << *(float*)(pca.project(feat).data) << endl;
 		vl_fisher_encode( enc, VL_TYPE_FLOAT,
                 vl_gmm_get_means(gmm), dim, nClusters,
                 vl_gmm_get_covariances(gmm),
                 vl_gmm_get_priors(gmm),
                 (float*)(pca.project(feat).data), numData,
                 VL_FISHER_FLAG_IMPROVED) ;
-        cout << *enc << endl;
         Mat fv(1, 2*dim*nClusters , CV_32F, enc);
-        //_debug(fv);
         Fv.push_back(fv);
         vl_free(enc);
-        break;
     }
     _debugSize(Fv);
     return Fv;
