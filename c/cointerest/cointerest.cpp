@@ -13,8 +13,19 @@ using namespace std;
 base* b;
 void db2fv(); 
 Mat extract_denseSift(const Mat& img); 
-void learn_gmm(const Mat& feat); 
+PCA learn_gmm(const Mat& feat, VlGMM* &); 
 void convVec2Mat(const vector<vector<Mat>>& sift, Mat& feat); 
+Mat generate_FV (const vector<Mat> &feat, const VlGMM* gmm, const PCA &pca) ;
+
+
+struct gmmModel
+{
+  Mat  means;
+  Mat  covs;
+  Mat  priors;
+  int Nclusters;
+  int dimension;
+};
 int main() {
    initModule_nonfree();
    b=new base();
@@ -36,7 +47,13 @@ void db2fv() {
     Mat feat;
     convVec2Mat(sift,feat);
     _debugSize(feat);
-    learn_gmm(feat);
+    _debugSize(sift);
+    VlGMM* gmm;
+    PCA pca=learn_gmm(feat, gmm);
+    vector<Mat> Fvs;
+    for (int i=0; i<sift.size(); i++) {
+       Fvs.push_back(generate_FV(sift[i], gmm, pca)); 
+    }
 }
 void convVec2Mat(const vector<vector<Mat>>& sift, Mat& feat) {
     for (vector<Mat> vec:sift) {
@@ -82,7 +99,7 @@ Mat extract_denseSift(const Mat& img) {
     return descriptors;
 }
 
-void learn_gmm(const Mat& feat) {
+PCA learn_gmm(const Mat& feat, VlGMM* &gmm) {
     int n_pca = b->n_pca;
     int n_gmm = b->n_gmm;
     Mat feat_;
@@ -97,21 +114,51 @@ void learn_gmm(const Mat& feat) {
     else
         feat.copyTo(feat_);
     _debugSize(feat_);
-    PCA pca(feat_, Mat(), CV_PCA_DATA_AS_COL, n_pca);
-    pca.eigenvectors.copyTo(feat_);
-    transpose(feat_,feat_);
+    PCA pca(feat_, Mat(), CV_PCA_DATA_AS_ROW, n_pca);
+    feat_ = pca.project(feat_);
+    //pca.eigenvectors.copyTo(feat_);
+    //transpose(feat_,feat_);
     _debugSize(feat_);
 
     Mat *featPtr = &feat_;
     vl_size dimension = feat_.cols;  
-    VlGMM* gmm = vl_gmm_new (VL_TYPE_DOUBLE, dimension, n_gmm) ;
+    gmm = vl_gmm_new (VL_TYPE_DOUBLE, dimension, n_gmm) ;
     vl_gmm_set_max_num_iterations (gmm, 30) ;
     vl_gmm_set_initialization (gmm,VlGMMKMeans);
-    cout << "dim: " << dimension << endl;
     cout << feat_.total() << endl;
     float* data = (float*)feat_.data;
     vl_gmm_cluster (gmm, data, feat_.rows);
+
+    
     //cout << vl_gmm_get_means(gmm) << endl;
-    cout << Eigen::Map<Eigen::MatrixXd>( (double*) vl_gmm_get_means(gmm), 1, dimension*n_gmm) << endl;
+    //cout << Eigen::Map<Eigen::MatrixXd>( (double*) vl_gmm_get_means(gmm), 1, dimension*n_gmm) << endl;
     //_debug(pca.eigenvectors);
+    return pca;
+}
+Mat generate_FV (const vector<Mat> &feats, const VlGMM* gmm, const PCA &pca) {
+    Mat Fv;
+    //_debugSize(pca.project(feat[0]));
+    vl_size dim = vl_gmm_get_dimension(gmm);
+    vl_size nClusters = vl_gmm_get_num_clusters(gmm);
+    vl_size numData = feats[0].rows;
+    //cout << "dim " << dim << " nclusters: " << nClusters << endl;
+    for (Mat feat : feats) {
+        //_debugSize(pca.project(feat));
+        float* enc = (float*)vl_malloc(sizeof(float) * 2 * dim * nClusters);
+        cout << *(float*)(pca.project(feat).data) << endl;
+		vl_fisher_encode( enc, VL_TYPE_FLOAT,
+                vl_gmm_get_means(gmm), dim, nClusters,
+                vl_gmm_get_covariances(gmm),
+                vl_gmm_get_priors(gmm),
+                (float*)(pca.project(feat).data), numData,
+                VL_FISHER_FLAG_IMPROVED) ;
+        cout << *enc << endl;
+        Mat fv(1, 2*dim*nClusters , CV_32F, enc);
+        //_debug(fv);
+        Fv.push_back(fv);
+        vl_free(enc);
+        break;
+    }
+    _debugSize(Fv);
+    return Fv;
 }
