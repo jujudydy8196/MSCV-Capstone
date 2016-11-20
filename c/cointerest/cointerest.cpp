@@ -16,14 +16,18 @@ Mat extract_denseSift(const Mat& img);
 PCA learn_gmm(const Mat& feat, VlGMM* &); 
 void convVec2Mat(const vector<vector<Mat>>& sift, Mat& feat); 
 Mat generate_FV (const vector<Mat> &feat, const VlGMM* gmm, const PCA &pca) ;
-vector<vector<float>>db2cosal() ;
+Mat db2cosal() ;
+void findCointerest(const vector<Mat> &FVs, const Mat &cosal);
 
 int main() {
    initModule_nonfree();
    b=new base();
    b->crop();
    vector<Mat> FVs = db2fv();
-   db2cosal();
+   //cout << "FVs len: " << FVs.size() << endl;
+   //_debugSize(FVs[0]);
+   Mat cosal=db2cosal();
+   findCointerest(FVs, cosal);
 }
 
 vector<Mat> db2fv() {
@@ -49,38 +53,63 @@ vector<Mat> db2fv() {
     }
     return Fvs;
 }
-vector<vector<float>> db2cosal() {
+Mat db2cosal() {
+//vector<vector<float>> db2cosal() {
     float grayMax=0.0;
-    vector<vector<float>> cropss;
+    Mat cropss;
+    //vector<vector<float>> cropss;
     for (int i=0; i<b->img_num; i++) {
         string fileName= b->cosal_path+b->files_list[i].substr(0,3)+"_cosaliency.png";
-        cout << fileName << endl;
         Mat im=imread(fileName.c_str(),1);
         Mat im_gray;
         cvtColor(im, im_gray, CV_BGR2GRAY);
         //cout << b->imsize << endl;
         int w = b->orgSize.width / b->gridSize;
         int h = b->orgSize.height / b->gridSize;
-        vector<float> crops;
+        //vector<float> crops;
         for (int i=0; i<w; i++) {
             for (int j=0; j<h; j++ ){
                 Mat crop = im_gray(Rect(i*b->gridSize,j*b->gridSize,b->gridSize,b->gridSize));
                 //cout <<"mean: " << mean(crop) << endl;
-                crops.push_back((float)mean(crop).val[0]);
+                cropss.push_back((float)mean(crop).val[0]);
+                //crops.push_back((float)mean(crop).val[0]);
                 grayMax = max(grayMax, (float)mean(crop).val[0]);
             }
         }
-        cropss.push_back(crops);
+        //cropss.push_back(crops);
     }
-    cout << "grayMax " << grayMax << endl;
-    for (auto &crop:cropss) {
-        for (float &c:crop) {
-            //cout << "before: " << c << " ";
-            c/=grayMax;
-            //cout << "after: " << c << endl;
-        }
-    }
+    cropss /= grayMax;
     return cropss;
+}
+void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
+    Mat feat_all;
+    for (auto &fv:FVs)
+        feat_all.push_back(fv);
+    _debugSize(feat_all);
+    Scalar mean, std;
+    meanStdDev(feat_all,mean,std);
+    feat_all -= mean[0];
+    feat_all /= (std[0]+0.0001);
+    int idx=0;
+    Mat degree;
+    for (int i=0; i<b->img_num; i++) {
+        Mat x = feat_all(Rect(0,idx,FVs[i].cols ,FVs[i].rows));
+        idx += FVs[i].rows;
+        //_debugSize(x);
+        Mat tmp = x*x.t();
+        Mat mask = tmp < 0;
+        mask.convertTo(mask, CV_8U, 1.0/255.0);
+        tmp.setTo(0, mask);
+        //_debugSize(tmp);
+        reduce(tmp,tmp,1,CV_REDUCE_SUM);
+        //_debugSize(tmp);
+        degree.push_back(tmp);
+        //break;
+    }
+    _debugSize(degree);
+    sqrt(degree,degree);
+    feat_all /= (repeat(degree, 1, feat_all.cols));
+
 }
 void convVec2Mat(const vector<vector<Mat>>& sift, Mat& feat) {
     for (vector<Mat> vec:sift) {
