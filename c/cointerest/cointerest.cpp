@@ -85,7 +85,6 @@ void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
     Mat feat_all;
     for (auto &fv:FVs)
         feat_all.push_back(fv);
-    _debugSize(feat_all);
     Scalar mean, std;
     meanStdDev(feat_all,mean,std);
     feat_all -= mean[0];
@@ -106,9 +105,70 @@ void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
         degree.push_back(tmp);
         //break;
     }
-    _debugSize(degree);
     sqrt(degree,degree);
-    feat_all /= (repeat(degree, 1, feat_all.cols));
+    divide(feat_all, repeat(degree, 1, feat_all.cols), feat_all);
+    //feat_all /= (repeat(degree, 1, feat_all.cols));
+     
+    multiply(feat_all, repeat(cosal, 1, feat_all.cols), feat_all);
+    Mat M = feat_all.t() * feat_all;
+    _debugSize(M);
+    
+    int max_scene=1;
+    for (int i=0; i<max_scene; i++) {
+        Mat eig, evec;
+        // TODO: eigen faster, get only 2
+        eigen(M, eig, evec);
+        //_debug(eig);
+        _debugSize(evec);
+        evec(Rect(0,0,evec.cols,2)).copyTo(evec);
+        _debugSize(evec);
+        evec = feat_all * evec.t();
+        _debugSize(evec);
+
+        
+        Mat labels, centers;
+        kmeans(evec, 2, labels, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 300, 0.0001), 5, KMEANS_PP_CENTERS, centers);
+        _debugSize(centers);
+        _debugSize(labels);
+
+        vector<double> norms;
+        for (int i=0; i<2; i++) 
+            norms.push_back(norm(centers.row(i)));
+        int tmp = (norms[0] > norms[1]) ? 0 : 1;
+        Mat idx = labels == tmp;
+        idx.convertTo(idx, CV_8U, 1.0/255.0);
+        //_debug(idx);
+        Mat f;
+        for (int i=0; i<idx.rows; i++) {
+            if (idx.at<uchar>(i,0)==1)
+                f.push_back(feat_all.row(i));
+        }
+        Mat mask;
+        repeat(idx,1,feat_all.cols,mask);
+        //feat_all.copyTo(f,idx);
+        //cout << countNonZero(idx) << endl;
+        _debugSize(f);
+        feat_all.setTo(0,mask);
+        //_debugSize(f.t()*f);
+
+        M -= (f.t() * f);
+        Mat tmp_cosal = cosal.clone();
+        //_debugSize(idx);
+        //_debugSize(tmp_cosal);
+        tmp_cosal.setTo(0,1-idx);
+        //cout << countNonZero(idx) << " " << countNonZero(tmp_cosal) << endl;
+        _debugSize(tmp_cosal);
+        reduce(tmp_cosal, tmp_cosal, 0, CV_REDUCE_SUM);
+        _debugSize(tmp_cosal);
+        _debug(tmp_cosal);
+        float prob = tmp_cosal.at<float>(0,0) / countNonZero(idx);
+        _debugSize(eig);
+        float score = prob * eig.at<float>(1,0);
+        cout << "prob : " << prob << " score: " << score << endl;
+        //evec = feat_all * evec;
+    }
+
+
 
 }
 void convVec2Mat(const vector<vector<Mat>>& sift, Mat& feat) {
