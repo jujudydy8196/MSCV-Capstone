@@ -90,8 +90,9 @@ void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
     feat_all -= mean[0];
     feat_all /= (std[0]+0.0001);
     int idx=0;
-    Mat degree;
+    Mat degree; //, frame_id;
     for (int i=0; i<b->img_num; i++) {
+        //frame_id.push_back(Mat(FVs[i].rows,1,CV_8UC1,Scalar(i)));
         Mat x = feat_all(Rect(0,idx,FVs[i].cols ,FVs[i].rows));
         idx += FVs[i].rows;
         //_debugSize(x);
@@ -105,6 +106,7 @@ void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
         degree.push_back(tmp);
         //break;
     }
+    //_debugSize(frame_id);
     sqrt(degree,degree);
     divide(feat_all, repeat(degree, 1, feat_all.cols), feat_all);
     //feat_all /= (repeat(degree, 1, feat_all.cols));
@@ -112,8 +114,12 @@ void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
     multiply(feat_all, repeat(cosal, 1, feat_all.cols), feat_all);
     Mat M = feat_all.t() * feat_all;
     _debugSize(M);
-    
-    int max_scene=1;
+    float th=0.1;
+    int max_scene=5;
+    int scene_idx=0;
+    Mat idx_all = Mat::zeros(feat_all.rows, 1, CV_8U);
+    Mat idx_occ = Mat::zeros(feat_all.rows, 1, CV_8U);
+    _debugSize(idx_all);
     for (int i=0; i<max_scene; i++) {
         Mat eig, evec;
         // TODO: eigen faster, get only 2
@@ -125,7 +131,6 @@ void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
         evec = feat_all * evec.t();
         _debugSize(evec);
 
-        
         Mat labels, centers;
         kmeans(evec, 2, labels, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 300, 0.0001), 5, KMEANS_PP_CENTERS, centers);
         _debugSize(centers);
@@ -138,15 +143,18 @@ void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
         Mat idx = labels == tmp;
         idx.convertTo(idx, CV_8U, 1.0/255.0);
         //_debug(idx);
-        Mat f;
+        Mat f;//, v;
         for (int i=0; i<idx.rows; i++) {
-            if (idx.at<uchar>(i,0)==1)
+            if (idx.at<uchar>(i,0)==1){ 
                 f.push_back(feat_all.row(i));
+                //v.push_back(frame_id.row(i));
+            }
         }
+        //_debugSize(v);
         Mat mask;
         repeat(idx,1,feat_all.cols,mask);
         //feat_all.copyTo(f,idx);
-        //cout << countNonZero(idx) << endl;
+        cout << countNonZero(idx) << endl;
         _debugSize(f);
         feat_all.setTo(0,mask);
         //_debugSize(f.t()*f);
@@ -165,8 +173,25 @@ void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
         _debugSize(eig);
         float score = prob * eig.at<float>(1,0);
         cout << "prob : " << prob << " score: " << score << endl;
-        //evec = feat_all * evec;
+        
+        //vector<float> uni = unique(v, true);
+        //cout << uni.size() << endl;
+        if (score < th)
+            break;
+        for (int i=0; i<idx.rows; i++) {
+            if (idx.at<uchar>(i,0)==1 && idx_occ.at<uchar>(i,0)==0){ 
+                idx_all.at<uchar>(i,0) = scene_idx+1;
+                idx_occ.at<uchar>(i,0)=1;
+            }
+        }
+        scene_idx++;
+        cout << countNonZero(idx_all) << endl;
     }
+    
+    //_debug(idx_all);
+    idx_all = idx_all.reshape(0,b->img_num);
+    _debug(idx_all);
+    _debugSize(idx_all);
 
 
 
