@@ -39,7 +39,7 @@ class Config {
 
         Config() {
    
-            img_set_name = "IMG_5094";
+            img_set_name = "IMG_5116";
             dir_name = "/home/judy/capstone/DATA/";
             img_path = dir_name + "frame/" + img_set_name +"/";
             result_path = dir_name + "c_result/" + img_set_name +"/";
@@ -52,10 +52,6 @@ class Config {
             if (!fs::exists(cosal_path)) { // Check if src folder exists
                 fs::create_directories(cosal_path); // create src folder
             }
-            //struct stat st = {0};
-            //if (stat(cosal_path.c_str(), &st) == -1) {
-                    //mkdir(cosal_path.c_str(), 0777);
-            //}
             DIR *dir;
             struct dirent *ent;
             

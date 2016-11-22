@@ -75,7 +75,6 @@ vector<Mat> db2fv() {
     return Fvs;
 }
 Mat db2cosal() {
-//vector<vector<float>> db2cosal() {
     float grayMax=0.0;
     Mat cropss;
     //vector<vector<float>> cropss;
@@ -168,32 +167,18 @@ int findCointerest(const vector<Mat> &FVs, const Mat &cosal, Mat &idx_all) {
                 //v.push_back(frame_id.row(i));
             }
         }
-        //_debugSize(v);
         Mat mask;
         repeat(idx,1,feat_all.cols,mask);
-        //feat_all.copyTo(f,idx);
-        //cout << countNonZero(idx) << endl;
-        //_debugSize(f);
         feat_all.setTo(0,mask);
-        //_debugSize(f.t()*f);
 
         M -= (f.t() * f);
         Mat tmp_cosal = cosal.clone();
-        //_debugSize(idx);
-        //_debugSize(tmp_cosal);
         tmp_cosal.setTo(0,1-idx);
-        //cout << countNonZero(idx) << " " << countNonZero(tmp_cosal) << endl;
-        //_debugSize(tmp_cosal);
         reduce(tmp_cosal, tmp_cosal, 0, CV_REDUCE_SUM);
-        //_debugSize(tmp_cosal);
-        //_debug(tmp_cosal);
         float prob = tmp_cosal.at<float>(0,0) / countNonZero(idx);
-        //_debugSize(eig);
         float score = prob * eig.at<float>(1,0);
         cout << "prob : " << prob << " score: " << score << endl;
         
-        //vector<float> uni = unique(v, true);
-        //cout << uni.size() << endl;
         if (score < th)
             break;
         for (int i=0; i<idx.rows; i++) {
@@ -203,13 +188,9 @@ int findCointerest(const vector<Mat> &FVs, const Mat &cosal, Mat &idx_all) {
             }
         }
         scene_idx++;
-        //cout << countNonZero(idx_all) << endl;
     }
     
-    //_debug(idx_all);
     idx_all = idx_all.reshape(0,b->img_num);
-    //_debug(idx_all);
-    //_debugSize(idx_all);
     return scene_idx;
 
 
@@ -275,8 +256,6 @@ PCA learn_gmm(const Mat& feat, VlGMM* &gmm) {
     _debugSize(feat_);
     PCA pca(feat_, Mat(), CV_PCA_DATA_AS_ROW, n_pca);
     feat_ = pca.project(feat_);
-    //pca.eigenvectors.copyTo(feat_);
-    //transpose(feat_,feat_);
     _debugSize(feat_);
 
     Mat *featPtr = &feat_;
@@ -284,14 +263,10 @@ PCA learn_gmm(const Mat& feat, VlGMM* &gmm) {
     gmm = vl_gmm_new (VL_TYPE_FLOAT, dimension, n_gmm) ;
     vl_gmm_set_max_num_iterations (gmm, 30) ;
     vl_gmm_set_initialization (gmm,VlGMMKMeans);
-    //cout << feat_.total() << endl;
     float* data = (float*)feat_.data;
     vl_gmm_cluster (gmm, data, feat_.rows);
 
     
-    //cout << vl_gmm_get_means(gmm) << endl;
-    //cout << Eigen::Map<Eigen::MatrixXd>( (double*) vl_gmm_get_priors(gmm), 1, n_gmm) << endl;
-    //_debug(pca.eigenvectors);
     return pca;
 }
 Mat generate_FV (const vector<Mat> &feats, const VlGMM* gmm, const PCA &pca) {
@@ -300,11 +275,7 @@ Mat generate_FV (const vector<Mat> &feats, const VlGMM* gmm, const PCA &pca) {
     vl_size dim = vl_gmm_get_dimension(gmm);
     vl_size nClusters = vl_gmm_get_num_clusters(gmm);
     vl_size numData = feats[0].rows;
-    //cout << "dim " << dim << " nclusters: " << nClusters << endl;
     for (Mat feat : feats) {
-    //for (int i=0; i<2; i++) {
-        //Mat feat = feats[i];
-        //_debugSize(pca.project(feat));
         float* enc = (float*)vl_malloc(sizeof(float) * 2 * dim * nClusters);
 		vl_fisher_encode( enc, VL_TYPE_FLOAT,
                 vl_gmm_get_means(gmm), dim, nClusters,

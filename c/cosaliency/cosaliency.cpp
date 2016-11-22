@@ -74,6 +74,7 @@ void saveResult(const Mat &result) {
     for (int i=0; i<settings->img_num; i++) {
         Mat r= result(Rect(settings->scale*i, 0, settings->scale, settings->scale));
         resize(r,r,settings->orgSize, INTER_CUBIC);
+        cout << "saving" << endl;
         imwrite(settings->cosal_path+settings->files_list[i].substr(0,3)+"_cosaliency.png", r*255);
     }
 }

@@ -2,13 +2,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(Cointerest)
 ADD_COMPILE_OPTIONS(-std=c++11)
 FIND_PACKAGE(OpenCV REQUIRED)
-#FIND_PACKAGE(Boost REQUIRED)
+find_package(Boost COMPONENTS system filesystem REQUIRED)
 
 SET(VLFEAT_INCLUDE_DIRS "../src")
-
-#FIND_PACKAGE(Boost COMPONENTS random system filesystem thread date_time iostreams serialization chrono REQUIRED)
-# Might be needed if using homebrew
-# LINK_DIRECTORIES(/usr/local/Cellar/tbb/4.4-20160128/lib)
 
 SET(CMAKE_MODULE_PATH "../src/eigen/cmake;${CMAKE_MODULE_PATH}")
 FIND_PACKAGE(Eigen3 REQUIRED )
@@ -22,4 +18,5 @@ MESSAGE(STATUS "    sources path: ${SOURCES}")
 ADD_LIBRARY(vlfeats ${SOURCES} )
 
 ADD_EXECUTABLE(coint cointerest.cpp)
-TARGET_LINK_LIBRARIES(coint ${OpenCV_LIBS} vlfeats ${OpenCV_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} -lpthread -lm)
+TARGET_LINK_LIBRARIES(coint ${OpenCV_LIBS} vlfeats ${OpenCV_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} ${Boost_FILESYSTEM_LIBRARY}
+      ${Boost_SYSTEM_LIBRARY} -lpthread -lm)
