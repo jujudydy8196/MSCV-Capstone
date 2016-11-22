@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <chrono>
 #include <Eigen/Dense>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -10,8 +11,12 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
 using namespace std;
 using namespace cv;
+using namespace std::chrono;
 
 #define _debugSize(x) cout << "_debugSize: " << #x << " : " << x.size() << endl;
 #define _debug(x) cout << "_debug: " << #x << " : " << x << endl << endl;
@@ -22,6 +27,8 @@ class Config {
         string img_set_name;
         string dir_name;
         string img_path;
+        string cosal_path;
+        string result_path;
 
         vector<string> files_list;
         vector<Mat> data_image_cv;
@@ -35,7 +42,20 @@ class Config {
             img_set_name = "IMG_5094";
             dir_name = "/home/judy/capstone/DATA/";
             img_path = dir_name + "frame/" + img_set_name +"/";
-            
+            result_path = dir_name + "c_result/" + img_set_name +"/";
+	
+            if (!fs::exists(result_path)) {
+                fs::create_directories(result_path); // create src folder
+            }
+
+            cosal_path = dir_name + "c_cosalient/" + img_set_name + "/";
+            if (!fs::exists(cosal_path)) { // Check if src folder exists
+                fs::create_directories(cosal_path); // create src folder
+            }
+            //struct stat st = {0};
+            //if (stat(cosal_path.c_str(), &st) == -1) {
+                    //mkdir(cosal_path.c_str(), 0777);
+            //}
             DIR *dir;
             struct dirent *ent;
             

@@ -4,10 +4,8 @@
 #include <eigen3/Eigen/Dense>
 extern "C" {
   #include <../src/vlfeat/vl/generic.h>
-  //#include <../src/vlfeat/vl/dsift.h>
   #include <../src/vlfeat/vl/gmm.h>
   #include <../src/vlfeat/vl/fisher.h>
-  //#include <../src/vlfeat/vl/svm.h>
 }
 using namespace std;
 base* b;
@@ -17,17 +15,40 @@ PCA learn_gmm(const Mat& feat, VlGMM* &);
 void convVec2Mat(const vector<vector<Mat>>& sift, Mat& feat); 
 Mat generate_FV (const vector<Mat> &feat, const VlGMM* gmm, const PCA &pca) ;
 Mat db2cosal() ;
-void findCointerest(const vector<Mat> &FVs, const Mat &cosal);
+int findCointerest(const vector<Mat> &FVs, const Mat &cosal, Mat& idx_all);
+void visualize (const Mat& feat_all, const int clusters); 
 
 int main() {
+   auto totalstart=high_resolution_clock::now();
+   auto start=high_resolution_clock::now();
    initModule_nonfree();
    b=new base();
+   auto end=high_resolution_clock::now();
+   _debugTime(start,end,"initialize");
+   start = high_resolution_clock::now();
    b->crop();
+   end = high_resolution_clock::now();
+   _debugTime(start,end,"crop");
+   start = high_resolution_clock::now();
    vector<Mat> FVs = db2fv();
+   end = high_resolution_clock::now();
+   _debugTime(start,end,"db2fv");
    //cout << "FVs len: " << FVs.size() << endl;
    //_debugSize(FVs[0]);
+   start = high_resolution_clock::now();
    Mat cosal=db2cosal();
-   findCointerest(FVs, cosal);
+   end = high_resolution_clock::now();
+   _debugTime(start,end,"db2cosal");
+   Mat idx_all;
+   start = high_resolution_clock::now();
+   int clusters = findCointerest(FVs, cosal,idx_all);
+   end = high_resolution_clock::now();
+   _debugTime(start,end,"findCointerest");
+   cout << clusters << " clusters " << endl;
+   start = high_resolution_clock::now();
+   visualize(idx_all,clusters);
+   end = high_resolution_clock::now();
+   _debugTime(start,end,"visualize");
 }
 
 vector<Mat> db2fv() {
@@ -81,7 +102,7 @@ Mat db2cosal() {
     cropss /= grayMax;
     return cropss;
 }
-void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
+int findCointerest(const vector<Mat> &FVs, const Mat &cosal, Mat &idx_all) {
     Mat feat_all;
     for (auto &fv:FVs)
         feat_all.push_back(fv);
@@ -113,28 +134,25 @@ void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
      
     multiply(feat_all, repeat(cosal, 1, feat_all.cols), feat_all);
     Mat M = feat_all.t() * feat_all;
-    _debugSize(M);
+    //_debugSize(M);
     float th=0.1;
     int max_scene=5;
     int scene_idx=0;
-    Mat idx_all = Mat::zeros(feat_all.rows, 1, CV_8U);
+    idx_all = Mat::zeros(feat_all.rows, 1, CV_8U);
     Mat idx_occ = Mat::zeros(feat_all.rows, 1, CV_8U);
-    _debugSize(idx_all);
+    //_debugSize(idx_all);
     for (int i=0; i<max_scene; i++) {
         Mat eig, evec;
         // TODO: eigen faster, get only 2
         eigen(M, eig, evec);
-        //_debug(eig);
-        _debugSize(evec);
+        //_debugSize(evec);
         evec(Rect(0,0,evec.cols,2)).copyTo(evec);
-        _debugSize(evec);
+        //_debugSize(evec);
         evec = feat_all * evec.t();
-        _debugSize(evec);
+        //_debugSize(evec);
 
         Mat labels, centers;
         kmeans(evec, 2, labels, TermCriteria(CV_TERMCRIT_ITER|CV_TERMCRIT_EPS, 300, 0.0001), 5, KMEANS_PP_CENTERS, centers);
-        _debugSize(centers);
-        _debugSize(labels);
 
         vector<double> norms;
         for (int i=0; i<2; i++) 
@@ -154,8 +172,8 @@ void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
         Mat mask;
         repeat(idx,1,feat_all.cols,mask);
         //feat_all.copyTo(f,idx);
-        cout << countNonZero(idx) << endl;
-        _debugSize(f);
+        //cout << countNonZero(idx) << endl;
+        //_debugSize(f);
         feat_all.setTo(0,mask);
         //_debugSize(f.t()*f);
 
@@ -165,12 +183,12 @@ void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
         //_debugSize(tmp_cosal);
         tmp_cosal.setTo(0,1-idx);
         //cout << countNonZero(idx) << " " << countNonZero(tmp_cosal) << endl;
-        _debugSize(tmp_cosal);
+        //_debugSize(tmp_cosal);
         reduce(tmp_cosal, tmp_cosal, 0, CV_REDUCE_SUM);
-        _debugSize(tmp_cosal);
-        _debug(tmp_cosal);
+        //_debugSize(tmp_cosal);
+        //_debug(tmp_cosal);
         float prob = tmp_cosal.at<float>(0,0) / countNonZero(idx);
-        _debugSize(eig);
+        //_debugSize(eig);
         float score = prob * eig.at<float>(1,0);
         cout << "prob : " << prob << " score: " << score << endl;
         
@@ -185,14 +203,14 @@ void findCointerest(const vector<Mat> &FVs, const Mat &cosal) {
             }
         }
         scene_idx++;
-        cout << countNonZero(idx_all) << endl;
+        //cout << countNonZero(idx_all) << endl;
     }
     
     //_debug(idx_all);
     idx_all = idx_all.reshape(0,b->img_num);
-    _debug(idx_all);
-    _debugSize(idx_all);
-
+    //_debug(idx_all);
+    //_debugSize(idx_all);
+    return scene_idx;
 
 
 }
@@ -313,4 +331,25 @@ Mat generate_FV (const vector<Mat> &feats, const VlGMM* gmm, const PCA &pca) {
     Fv /= tmp;
     //_debugSize(Fv);
     return Fv;
+}
+
+void visualize (const Mat& feat_all, const int clusters) {
+    Mat count = Mat::zeros(feat_all.rows,clusters, CV_8U);
+    _debugSize(count);
+    for (int i=1; i<=clusters; i++) {
+        int maxIdx=-1, maxCount=-1;
+        cout << "cluster: " << i << endl;
+        for (int frame=0; frame<b->img_num; frame++) {
+            int c=countNonZero(feat_all.row(frame)==i);
+            cout << "frame " << frame << " " << c << endl;
+            if (c >= maxCount) {
+                maxCount = c;
+                maxIdx = frame;
+            }
+        }
+        cout << "maxIdx " << maxIdx << endl;
+        string str = b->result_path + "result_" + to_string(i) + ".png";
+        imwrite(str, b->data_image_cv[maxIdx]);
+    }
+
 }

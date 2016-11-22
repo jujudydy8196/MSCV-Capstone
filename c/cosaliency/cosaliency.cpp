@@ -73,8 +73,8 @@ void saveResult(const Mat &result) {
 //void saveResult(const Mat &result, const Size imsize) {
     for (int i=0; i<settings->img_num; i++) {
         Mat r= result(Rect(settings->scale*i, 0, settings->scale, settings->scale));
-        resize(r,r,settings->imsize, INTER_CUBIC);
-        imwrite(settings->result_path+settings->files_list[i].substr(0,3)+"_cosaliency.png", r*255);
+        resize(r,r,settings->orgSize, INTER_CUBIC);
+        imwrite(settings->cosal_path+settings->files_list[i].substr(0,3)+"_cosaliency.png", r*255);
     }
 }
 void GetImVector(const Mat &img, Mat &featureVec, Mat &disVec) {

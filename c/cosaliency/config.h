@@ -23,7 +23,6 @@ public:
     //string img_set_name;
     //string dir_name;
     //string img_path;
-    string result_path;
 
 
     // co-saliency parameters
@@ -43,11 +42,6 @@ public:
         //img_set_name = "IMG_5094";
         //dir_name = "/home/judy/capstone/DATA/";
         //img_path = dir_name + "frame/" + img_set_name +"/";
-        result_path = dir_name + "c_cosalient/" + img_set_name + "/";
-        struct stat st = {0};
-        if (stat(result_path.c_str(), &st) == -1) {
-                mkdir(result_path.c_str(), 0777);
-        }
         //DIR *dir;
         //struct dirent *ent;
         
