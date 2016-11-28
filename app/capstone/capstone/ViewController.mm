@@ -81,10 +81,13 @@ Float64 idx=0;
             NSError *err;
             CMTime actualTime;
             CGImageRef image = [imageGenerator copyCGImageAtTime:time actualTime:&actualTime error:&err];
-            UIImage *generatedImage = [[UIImage alloc] initWithCGImage:image ];
-            UIImageView *images =[[UIImageView alloc]initWithFrame:CGRectMake(0, 0, self.view.frame.size.height/2, self.view.frame.size.width/2)];
+            UIImage *generatedImage = [[UIImage alloc] initWithCGImage:image
+                                                                 scale:1
+                                                           orientation:UIImageOrientationRight];
+            UIImageView *images =[[UIImageView alloc]initWithFrame:CGRectMake(0, 0, self.view.frame.size.width/2, self.view.frame.size.height/2)];
             [images setImage:generatedImage];
             [self.view addSubview:images];
+            
             //            [self saveImage: generatedImage atTime:actualTime];
             CGImageRelease(image);
         }
