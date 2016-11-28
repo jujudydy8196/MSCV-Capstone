@@ -18,6 +18,10 @@
 		8B33CDE11DEB875400A7BF56 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B33CDDF1DEB875400A7BF56 /* AVFoundation.framework */; };
 		8B33CDE21DEB875400A7BF56 /* AVKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B33CDE01DEB875400A7BF56 /* AVKit.framework */; };
 		8BA155221DEB9E7F006CDA77 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8BA155211DEB9E7F006CDA77 /* CoreMedia.framework */; };
+		8BA155251DEBD0F7006CDA77 /* c in Resources */ = {isa = PBXBuildFile; fileRef = 8BA155241DEBD0F7006CDA77 /* c */; };
+		8BA155281DECBA49006CDA77 /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8BA155271DECBA48006CDA77 /* opencv2.framework */; };
+		8BA1552A1DECC610006CDA77 /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8BA155291DECC610006CDA77 /* AssetsLibrary.framework */; };
+		8BA155311DECE5BB006CDA77 /* IMG_5094 in Resources */ = {isa = PBXBuildFile; fileRef = 8BA155301DECE5BB006CDA77 /* IMG_5094 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -48,6 +52,11 @@
 		8B33CDDF1DEB875400A7BF56 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		8B33CDE01DEB875400A7BF56 /* AVKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVKit.framework; path = System/Library/Frameworks/AVKit.framework; sourceTree = SDKROOT; };
 		8BA155211DEB9E7F006CDA77 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
+		8BA155241DEBD0F7006CDA77 /* c */ = {isa = PBXFileReference; lastKnownFileType = folder; name = c; path = ../../../c; sourceTree = "<group>"; };
+		8BA155261DECAF88006CDA77 /* config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
+		8BA155271DECBA48006CDA77 /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = opencv2.framework; sourceTree = "<group>"; };
+		8BA155291DECC610006CDA77 /* AssetsLibrary.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AssetsLibrary.framework; path = System/Library/Frameworks/AssetsLibrary.framework; sourceTree = SDKROOT; };
+		8BA155301DECE5BB006CDA77 /* IMG_5094 */ = {isa = PBXFileReference; lastKnownFileType = folder; path = IMG_5094; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,8 +64,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8BA1552A1DECC610006CDA77 /* AssetsLibrary.framework in Frameworks */,
 				8BA155221DEB9E7F006CDA77 /* CoreMedia.framework in Frameworks */,
 				8B33CDE11DEB875400A7BF56 /* AVFoundation.framework in Frameworks */,
+				8BA155281DECBA49006CDA77 /* opencv2.framework in Frameworks */,
 				8B33CDE21DEB875400A7BF56 /* AVKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -74,6 +85,8 @@
 		8B33CDAA1DEB7EBF00A7BF56 = {
 			isa = PBXGroup;
 			children = (
+				8BA155291DECC610006CDA77 /* AssetsLibrary.framework */,
+				8BA155271DECBA48006CDA77 /* opencv2.framework */,
 				8BA155211DEB9E7F006CDA77 /* CoreMedia.framework */,
 				8B33CDDF1DEB875400A7BF56 /* AVFoundation.framework */,
 				8B33CDE01DEB875400A7BF56 /* AVKit.framework */,
@@ -95,6 +108,7 @@
 		8B33CDB51DEB7EBF00A7BF56 /* capstone */ = {
 			isa = PBXGroup;
 			children = (
+				8BA155241DEBD0F7006CDA77 /* c */,
 				8B33CDB91DEB7EBF00A7BF56 /* AppDelegate.h */,
 				8B33CDBA1DEB7EBF00A7BF56 /* AppDelegate.m */,
 				8B33CDBC1DEB7EBF00A7BF56 /* ViewController.h */,
@@ -104,6 +118,7 @@
 				8B33CDC41DEB7EBF00A7BF56 /* LaunchScreen.storyboard */,
 				8B33CDC71DEB7EBF00A7BF56 /* Info.plist */,
 				8B33CDB61DEB7EBF00A7BF56 /* Supporting Files */,
+				8BA155261DECAF88006CDA77 /* config.h */,
 			);
 			path = capstone;
 			sourceTree = "<group>";
@@ -111,6 +126,7 @@
 		8B33CDB61DEB7EBF00A7BF56 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				8BA155301DECE5BB006CDA77 /* IMG_5094 */,
 				8B33CDDD1DEB811000A7BF56 /* IMG_5094.MOV */,
 				8B33CDB71DEB7EBF00A7BF56 /* main.m */,
 			);
@@ -207,9 +223,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8BA155311DECE5BB006CDA77 /* IMG_5094 in Resources */,
 				8B33CDC61DEB7EBF00A7BF56 /* LaunchScreen.storyboard in Resources */,
 				8B33CDC31DEB7EBF00A7BF56 /* Assets.xcassets in Resources */,
 				8B33CDDE1DEB811000A7BF56 /* IMG_5094.MOV in Resources */,
+				8BA155251DEBD0F7006CDA77 /* c in Resources */,
 				8B33CDC11DEB7EBF00A7BF56 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -361,6 +379,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				INFOPLIST_FILE = capstone/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = judy.capstone;
@@ -373,6 +396,11 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				ENABLE_BITCODE = NO;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				INFOPLIST_FILE = capstone/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = judy.capstone;

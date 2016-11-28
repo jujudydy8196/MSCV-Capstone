@@ -10,16 +10,28 @@
 #import <AVFoundation/AVFoundation.h>
 #import <AVKit/AVKit.h>
 #import <CoreMedia/CoreMedia.h>
+#import <opencv2/highgui/ios.h>
 
-@interface ViewController : UIViewController
+
+// Slightly changed things here to employ the CvVideoCameraDelegate
+@interface ViewController : UIViewController<CvVideoCameraDelegate>
 {
+    CvVideoCamera *videoCamera; // OpenCV class for accessing the camera
     AVAudioRecorder *recorder;
     AVPlayer *player;
+    
 }
+// Declare internal property of videoCamera
+@property (nonatomic, retain) CvVideoCamera *videoCamera;
+
 
 @property (strong, nonatomic) IBOutlet UIButton* btnPlay;
 - (IBAction)btnPlay:(id)sender;
 - (IBAction)btnTakePhoto:(id)sender;
+
+
+
+
 
 @end
 
