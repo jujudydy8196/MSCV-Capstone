@@ -12,8 +12,8 @@
 
 using namespace cv;
 
-Mat cosaliency();
-void saveResult(const Mat &result);
+vector<Mat> cosaliency();
+vector<Mat> saveResult(const Mat &result);
 void GetImVector(const Mat &img, Mat &featureVec, Mat &disVec);
 
 Mat GetSalWeight(const Mat &centers, const Mat &labels);

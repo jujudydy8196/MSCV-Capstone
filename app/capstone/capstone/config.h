@@ -83,7 +83,12 @@ public:
                 UIImage *img = [UIImage imageNamed:cname];
                 [imagesArray addObject:img];
                 cv::Mat cvImage;
-                UIImageToMat(img, cvImage);
+                UIImageToMat(img, cvImage,true);
+//                cout << cvImage.size() << endl;
+                orgSize=cvImage.size();
+//                resize(m,m,Size(),0.5,0.5, INTER_CUBIC);
+//                imsize = m.size();
+//                cout << cvImage.channels() << endl;
                 data_image_cv.push_back(cvImage);
             }
         }];

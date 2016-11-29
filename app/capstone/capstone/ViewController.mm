@@ -33,11 +33,34 @@ AVAsset *asset = [AVAsset assetWithURL:url];
 AVAssetImageGenerator *imageGenerator = [[AVAssetImageGenerator alloc]initWithAsset:asset];
 Float64 FPS=1;
 Float64 idx=0;
+vector<Mat> cosalResult;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+
+    // Initialize the view
+    // Hacky way to initialize the view to ensure the aspect ratio looks correct
+    // across all devices. Unfortunately, setting UIViewContentModeScaleAspectFill
+    // does not work with the CvCamera Delegate so we have to hard code everything....
+    //
+    // Assuming camera input is 352x288 (set using AVCaptureSessionPreset)
+    //    float cam_width = 288; float cam_height = 352;
+    float cam_width = 480; float cam_height = 640;
+    //    float cam_width = 720; float cam_height = 1280;
+    
+    // Take into account size of camera input
+    int view_width = self.view.frame.size.width;
+    int view_height = (int)(cam_height*self.view.frame.size.width/cam_width);
+    int offset = (self.view.frame.size.height - view_height)/2;
+    
+    imageView_ = [[UIImageView alloc] initWithFrame:CGRectMake(0.0, offset, view_width, view_height)];
+    //[imageView_ setContentMode:UIViewContentModeScaleAspectFill]; (does not work)
+    [self.view addSubview:imageView_]; // Add the view
+    
     cout << self.view.frame.size.width << " " << self.view.frame.size.height << endl;
-    Mat cosalResult = cosaliency();
+    cosalResult = cosaliency();
+    cout << "cosal result finish" << endl;
+    
     
 //    Config* config = new Config();
     
@@ -69,49 +92,33 @@ Float64 idx=0;
     
     
     
-    // Initialize the view
-    // Hacky way to initialize the view to ensure the aspect ratio looks correct
-    // across all devices. Unfortunately, setting UIViewContentModeScaleAspectFill
-    // does not work with the CvCamera Delegate so we have to hard code everything....
-    //
-    // Assuming camera input is 352x288 (set using AVCaptureSessionPreset)
-    //    float cam_width = 288; float cam_height = 352;
-    float cam_width = 480; float cam_height = 640;
-//    float cam_width = 720; float cam_height = 1280;
+
     
-    // Take into account size of camera input
-    int view_width = self.view.frame.size.width;
-    int view_height = (int)(cam_height*self.view.frame.size.width/cam_width);
-    int offset = (self.view.frame.size.height - view_height)/2;
-    
-    imageView_ = [[UIImageView alloc] initWithFrame:CGRectMake(0.0, offset, view_width, view_height)];
-    
-    //[imageView_ setContentMode:UIViewContentModeScaleAspectFill]; (does not work)
-    [self.view addSubview:imageView_]; // Add the view
-    
-    // Initialize the video camera
-    self.videoCamera = [[CvVideoCamera alloc] initWithParentView:imageView_];
-    self.videoCamera.delegate = self;
-    self.videoCamera.defaultAVCaptureDevicePosition = AVCaptureDevicePositionBack;
-    self.videoCamera.defaultAVCaptureVideoOrientation = AVCaptureVideoOrientationPortrait;
-    self.videoCamera.defaultFPS = FPS; // Set the frame rate
-    self.videoCamera.grayscaleMode = NO; // Get grayscale
-    self.videoCamera.rotateVideo = YES; // Rotate video so everything looks correct
-    
-    // Choose these depending on the camera input chosen
-    //    self.videoCamera.defaultAVCaptureSessionPreset = AVCaptureSessionPreset352x288;
-    self.videoCamera.defaultAVCaptureSessionPreset = AVCaptureSessionPreset640x480;
-//    self.videoCamera.defaultAVCaptureSessionPreset = AVCaptureSessionPreset1280x720;
-    
-    // Finally add the FPS text to the view
-    fpsView_ = [[UITextView alloc] initWithFrame:CGRectMake(0,15,view_width,std::max(offset,35))];
-    [fpsView_ setOpaque:false]; // Set to be Opaque
-    [fpsView_ setBackgroundColor:[UIColor clearColor]]; // Set background color to be clear
-    [fpsView_ setTextColor:[UIColor redColor]]; // Set text to be RED
-    [fpsView_ setFont:[UIFont systemFontOfSize:18]]; // Set the Font size
-    [self.view addSubview:fpsView_];
-    
-    [videoCamera start];
+
+//    
+//    // Initialize the video camera
+//    self.videoCamera = [[CvVideoCamera alloc] initWithParentView:imageView_];
+//    self.videoCamera.delegate = self;
+//    self.videoCamera.defaultAVCaptureDevicePosition = AVCaptureDevicePositionBack;
+//    self.videoCamera.defaultAVCaptureVideoOrientation = AVCaptureVideoOrientationPortrait;
+//    self.videoCamera.defaultFPS = FPS; // Set the frame rate
+//    self.videoCamera.grayscaleMode = NO; // Get grayscale
+//    self.videoCamera.rotateVideo = YES; // Rotate video so everything looks correct
+//    
+//    // Choose these depending on the camera input chosen
+//    //    self.videoCamera.defaultAVCaptureSessionPreset = AVCaptureSessionPreset352x288;
+//    self.videoCamera.defaultAVCaptureSessionPreset = AVCaptureSessionPreset640x480;
+////    self.videoCamera.defaultAVCaptureSessionPreset = AVCaptureSessionPreset1280x720;
+//    
+//    // Finally add the FPS text to the view
+//    fpsView_ = [[UITextView alloc] initWithFrame:CGRectMake(0,15,view_width,std::max(offset,35))];
+//    [fpsView_ setOpaque:false]; // Set to be Opaque
+//    [fpsView_ setBackgroundColor:[UIColor clearColor]]; // Set background color to be clear
+//    [fpsView_ setTextColor:[UIColor redColor]]; // Set text to be RED
+//    [fpsView_ setFont:[UIFont systemFontOfSize:18]]; // Set the Font size
+//    [self.view addSubview:fpsView_];
+//    
+//    [videoCamera start];
     
     
 }
@@ -123,7 +130,7 @@ Float64 idx=0;
 }
 
 - (IBAction)btnPlay:(id)sender {
-    [videoCamera stop];
+//    [videoCamera stop];
 //    player = [AVPlayer playerWithURL:url];
 //    AVPlayerLayer *playerLayer = [AVPlayerLayer playerLayerWithPlayer:player];
 //    playerLayer.frame = self.view.bounds;
@@ -132,10 +139,43 @@ Float64 idx=0;
 }
 
 
+//NSArray *writeDir = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+//NSString *documentsDirectory = [writeDir objectAtIndex:0];
+
 
 
 - (IBAction)btnTakePhoto:(id)sender {
-    [videoCamera stop];
+//    for (int i=0; i<cosalResult.size(); i++) {
+    if (idx<cosalResult.size()) {
+//        cout << cosalResult[idx]*255 << endl << endl;
+        Mat img=cosalResult[idx];
+//        NSString *cvpath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:[NSString stringWithFormat:@"%03d_cosal.png", idx]];
+//        const char* cPath = [cvpath cStringUsingEncoding:NSMacOSRomanStringEncoding];
+//        
+//        const cv::string newPaths = (const cv::string)cPath;
+//        cout << newPaths << endl;
+//        imwrite(newPaths, img*255);
+//        _debug(img*255);
+//        cvtColor( img, img, CV_BGR2RGB);
+        UIImage *resImage = MatToUIImage(img*255);
+        NSArray *imgpaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *filePath = [[imgpaths objectAtIndex:0] stringByAppendingPathComponent:@"cosal.png"];
+        const char* cPath = [filePath cStringUsingEncoding:NSMacOSRomanStringEncoding];
+
+        const cv::string newPaths = (const cv::string)cPath;
+        imwrite(newPaths, img*255);
+
+        // Save image.
+//        [UIImagePNGRepresentation(resImage) writeToFile:filePath atomically:YES];
+        NSLog(filePath);
+        [imageView_ setImage:resImage];
+        [self.view addSubview:imageView_];
+//        imageView_.image =  [UIImage imageWithCGImage:[resImage CGImage]
+//                                                scale:1.0
+//                                          orientation: UIImageOrientationLeftMirrored];
+        idx++;
+    }
+//    [videoCamera stop];
 //    if (idx<CMTimeGetSeconds(asset.duration)*FPS) {
 ////        cout << i << endl;
 //        @autoreleasepool {

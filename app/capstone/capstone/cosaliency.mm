@@ -11,27 +11,37 @@
 
 cosal_config* settings;
 
-Mat cosaliency() {
+vector<Mat> cosaliency() {
     settings = new cosal_config();
     Mat result_sig_map = SingleSaliencyMain();
     Mat result_cos_map = CoSaliencyMain();
     Mat result = result_sig_map.mul(result_cos_map);
-    return result;
+    
+    return saveResult(result);
 }
 
-void saveResult(const Mat &result) {
+vector<Mat> saveResult(const Mat &result) {
     //void saveResult(const Mat &result, const Size imsize) {
+    vector<Mat> cosal_results;
     for (int i=0; i<settings->img_num; i++) {
         Mat r= result(cv::Rect(settings->scale*i, 0, settings->scale, settings->scale));
         resize(r,r,settings->orgSize, INTER_CUBIC);
-        cout << "saving" << endl;
-        imwrite(settings->cosal_path+settings->files_list[i].substr(0,3)+"_cosaliency.png", r*255);
+        cosal_results.push_back(r);
+//        cout << "saving" << endl;
+//        imwrite(settings->cosal_path+settings->files_list[i].substr(0,3)+"_cosaliency.png", r*255);
+        imwrite(to_string(i)+"_cosaliency.png", r*255);
+        
+
     }
+    return cosal_results;
 }
 
 void GetImVector(const Mat &img, Mat &featureVec, Mat &disVec) {
     Mat img2;
-    cvtColor(img, img2, CV_BGR2Lab);
+//    cvtColor(img, img2, CV_BGR2Lab);
+    cvtColor(img, img2, CV_RGB2Lab);
+    
+    cout << img.channels() << " " << img2.channels() << endl;
     //_debug(img2);
     img2.convertTo(img2, CV_32F);//, 1.0/255.0);
     featureVec = img2.reshape(1,settings->scale*settings->scale);
