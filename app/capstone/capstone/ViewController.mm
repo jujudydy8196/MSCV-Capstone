@@ -7,7 +7,6 @@
 //
 
 #import "ViewController.h"
-#import "config.h"
 // Include stdlib.h and std namespace so we can mix C++ code in here
 #include <stdlib.h>
 #include <iostream>
@@ -38,7 +37,9 @@ Float64 idx=0;
 - (void)viewDidLoad {
     [super viewDidLoad];
     cout << self.view.frame.size.width << " " << self.view.frame.size.height << endl;
-    Config* config = new Config();
+    Mat cosalResult = cosaliency();
+    
+//    Config* config = new Config();
     
 //    AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:url options:nil];
 //    AVAssetImageGenerator *generator = [[AVAssetImageGenerator alloc] initWithAsset:asset];
