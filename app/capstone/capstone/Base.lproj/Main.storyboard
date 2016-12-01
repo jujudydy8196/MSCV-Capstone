@@ -16,26 +16,7 @@
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" ambiguous="YES" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Xuy-s0-wgr">
-                                <rect key="frame" x="285" y="562" width="30" height="30"/>
-                                <state key="normal" title="play"/>
-                                <connections>
-                                    <action selector="btnPlay:" destination="BYZ-38-t0r" eventType="touchUpInside" id="iyj-90-n0I"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Rg0-OI-qGS">
-                                <rect key="frame" x="362" y="562" width="70" height="30"/>
-                                <state key="normal" title="takephoto"/>
-                                <connections>
-                                    <action selector="btnTakePhoto:" destination="BYZ-38-t0r" eventType="touchUpInside" id="EuG-AE-tvP"/>
-                                </connections>
-                            </button>
-                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
-                        <constraints>
-                            <constraint firstItem="Xuy-s0-wgr" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="ssN-vN-eKd"/>
-                        </constraints>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>

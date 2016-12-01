@@ -30,6 +30,16 @@ Mat cosaliency_co() {
     return result;
 }
 
+Mat cosaliency_recording(cosal_config* set) {
+    settings = set;
+    Mat result_sig_map = SingleSaliencyMain();
+    Mat result_cos_map = CoSaliencyMain();
+    Mat result = result_sig_map.mul(result_cos_map);
+    resize(result,result,cv::Size(settings->orgSize.width*settings->img_num,settings->orgSize.height),INTER_CUBIC);
+    
+    return result;
+}
+
 vector<Mat> saveResult(const Mat &result) {
     //void saveResult(const Mat &result, const Size imsize) {
     vector<Mat> cosal_results;

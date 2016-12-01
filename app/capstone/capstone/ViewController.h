@@ -34,9 +34,9 @@
 @property (nonatomic, retain) CvVideoCamera *videoCamera;
 
 
-@property (strong, nonatomic) IBOutlet UIButton* btnPlay;
-- (IBAction)btnPlay:(id)sender;
-- (IBAction)btnTakePhoto:(id)sender;
+//@property (strong, nonatomic) IBOutlet UIButton* btnPlay;
+//- (IBAction)btnPlay:(id)sender;
+//- (IBAction)btnTakePhoto:(id)sender;
 
 
 

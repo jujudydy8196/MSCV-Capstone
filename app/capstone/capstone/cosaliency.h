@@ -14,6 +14,8 @@ using namespace cv;
 
 vector<Mat> cosaliency();
 Mat cosaliency_co() ;
+Mat cosaliency_recording(cosal_config* set) ;
+
 vector<Mat> saveResult(const Mat &result);
 void GetImVector(const Mat &img, Mat &featureVec, Mat &disVec);
 
