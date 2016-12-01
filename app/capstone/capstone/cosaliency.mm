@@ -17,7 +17,17 @@ vector<Mat> cosaliency() {
     Mat result_cos_map = CoSaliencyMain();
     Mat result = result_sig_map.mul(result_cos_map);
     
+
     return saveResult(result);
+}
+Mat cosaliency_co() {
+    settings = new cosal_config();
+    Mat result_sig_map = SingleSaliencyMain();
+    Mat result_cos_map = CoSaliencyMain();
+    Mat result = result_sig_map.mul(result_cos_map);
+    resize(result,result,cv::Size(settings->orgSize.width*settings->img_num,settings->orgSize.height),INTER_CUBIC);
+    
+    return result;
 }
 
 vector<Mat> saveResult(const Mat &result) {
@@ -29,7 +39,7 @@ vector<Mat> saveResult(const Mat &result) {
         cosal_results.push_back(r);
 //        cout << "saving" << endl;
 //        imwrite(settings->cosal_path+settings->files_list[i].substr(0,3)+"_cosaliency.png", r*255);
-        imwrite(to_string(i)+"_cosaliency.png", r*255);
+//        imwrite(to_string(i)+"_cosaliency.png", r*255);
         
 
     }

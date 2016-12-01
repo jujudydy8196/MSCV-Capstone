@@ -16,6 +16,7 @@
 #import <CoreMedia/CoreMedia.h>
 #endif
 #include "cosaliency.h"
+#include "cointerest.h"
 
 //#import "opencv2/highgui/ios.h"
 

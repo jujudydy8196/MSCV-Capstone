@@ -20,6 +20,7 @@
 		8B4462CF1DED2C9C00567D9F /* opencv2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B4462CE1DED2C9C00567D9F /* opencv2.framework */; };
 		8B4462D31DED3A4500567D9F /* CoreVideo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B4462D21DED3A4500567D9F /* CoreVideo.framework */; };
 		8B4462D91DED3D1000567D9F /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8B4462D81DED3D1000567D9F /* libjpeg.a */; };
+		8B881AB01DEE3F28005C9961 /* src in Resources */ = {isa = PBXBuildFile; fileRef = 8B881AAF1DEE3F28005C9961 /* src */; };
 		8BA155221DEB9E7F006CDA77 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8BA155211DEB9E7F006CDA77 /* CoreMedia.framework */; };
 		8BA155251DEBD0F7006CDA77 /* c in Resources */ = {isa = PBXBuildFile; fileRef = 8BA155241DEBD0F7006CDA77 /* c */; };
 		8BA1552A1DECC610006CDA77 /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8BA155291DECC610006CDA77 /* AssetsLibrary.framework */; };
@@ -57,6 +58,9 @@
 		8B4462CE1DED2C9C00567D9F /* opencv2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = opencv2.framework; path = "../../../../app/Assignment_2/CvVideoCamera_Example-master/opencv2.framework"; sourceTree = "<group>"; };
 		8B4462D21DED3A4500567D9F /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		8B4462D81DED3D1000567D9F /* libjpeg.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libjpeg.a; sourceTree = "<group>"; };
+		8B4462DA1DEE2B5B00567D9F /* cointerest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cointerest.h; sourceTree = "<group>"; };
+		8B4462DB1DEE2B7500567D9F /* cointerest.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = cointerest.mm; sourceTree = "<group>"; };
+		8B881AAF1DEE3F28005C9961 /* src */ = {isa = PBXFileReference; lastKnownFileType = folder; path = src; sourceTree = "<group>"; };
 		8B9F01A21DED119C0035A6E8 /* cosaliency.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cosaliency.h; sourceTree = "<group>"; };
 		8BA155211DEB9E7F006CDA77 /* CoreMedia.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMedia.framework; path = System/Library/Frameworks/CoreMedia.framework; sourceTree = SDKROOT; };
 		8BA155241DEBD0F7006CDA77 /* c */ = {isa = PBXFileReference; lastKnownFileType = folder; name = c; path = ../../../c; sourceTree = "<group>"; };
@@ -121,16 +125,19 @@
 			children = (
 				8BA155241DEBD0F7006CDA77 /* c */,
 				8B33CDB91DEB7EBF00A7BF56 /* AppDelegate.h */,
+				8B4462DA1DEE2B5B00567D9F /* cointerest.h */,
 				8BA155261DECAF88006CDA77 /* config.h */,
 				8B9F01A21DED119C0035A6E8 /* cosaliency.h */,
 				8B33CDBC1DEB7EBF00A7BF56 /* ViewController.h */,
 				8B33CDBA1DEB7EBF00A7BF56 /* AppDelegate.m */,
+				8B4462DB1DEE2B7500567D9F /* cointerest.mm */,
 				8BA155341DECF47A006CDA77 /* cosaliency.mm */,
 				8B33CDBD1DEB7EBF00A7BF56 /* ViewController.mm */,
 				8B33CDC71DEB7EBF00A7BF56 /* Info.plist */,
 				8B33CDC21DEB7EBF00A7BF56 /* Assets.xcassets */,
 				8B33CDC41DEB7EBF00A7BF56 /* LaunchScreen.storyboard */,
 				8B33CDBF1DEB7EBF00A7BF56 /* Main.storyboard */,
+				8B881AAF1DEE3F28005C9961 /* src */,
 				8B33CDB61DEB7EBF00A7BF56 /* Supporting Files */,
 			);
 			path = capstone;
@@ -241,6 +248,7 @@
 				8B33CDC31DEB7EBF00A7BF56 /* Assets.xcassets in Resources */,
 				8B33CDDE1DEB811000A7BF56 /* IMG_5094.MOV in Resources */,
 				8BA155251DEBD0F7006CDA77 /* c in Resources */,
+				8B881AB01DEE3F28005C9961 /* src in Resources */,
 				8B33CDC11DEB7EBF00A7BF56 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -392,7 +400,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -400,7 +410,13 @@
 					"$(PROJECT_DIR)",
 					/Users/judy/ios,
 				);
-				HEADER_SEARCH_PATHS = " $(inherited)";
+				HEADER_SEARCH_PATHS = (
+					"<Multiple",
+					"values>",
+					"\"${SRCROOT}/src/vl\"",
+					"\"${SRCROOT}\"",
+				);
+				"HEADER_SEARCH_PATHS[arch=*]" = "$(inherited)";
 				INFOPLIST_FILE = capstone/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
@@ -408,8 +424,12 @@
 					"$(PROJECT_DIR)/capstone",
 					"$(PROJECT_DIR)",
 				);
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = judy.capstone;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)\"/**";
+				VALID_ARCHS = "arm64 armv7 armv7s armv6 i386";
 			};
 			name = Debug;
 		};
@@ -417,7 +437,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				ARCHS = "$(ARCHS_STANDARD)";
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -425,7 +447,13 @@
 					"$(PROJECT_DIR)",
 					/Users/judy/ios,
 				);
-				HEADER_SEARCH_PATHS = " $(inherited)";
+				HEADER_SEARCH_PATHS = (
+					"<Multiple",
+					"values>",
+					"\"${SRCROOT}\"",
+					"\"${SRCROOT}/src/vl\"",
+				);
+				"HEADER_SEARCH_PATHS[arch=*]" = " $(inherited)";
 				INFOPLIST_FILE = capstone/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
@@ -433,8 +461,12 @@
 					"$(PROJECT_DIR)/capstone",
 					"$(PROJECT_DIR)",
 				);
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = judy.capstone;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				USER_HEADER_SEARCH_PATHS = "\"$(SRCROOT)\"/**";
+				VALID_ARCHS = "arm64 armv7 armv7s armv6 i386";
 			};
 			name = Release;
 		};

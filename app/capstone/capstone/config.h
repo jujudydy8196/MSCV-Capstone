@@ -14,13 +14,14 @@
 //#include <sys/stat.h>
 #include <unistd.h>
 //#include <dirent.h>
-#include <chrono>
+//#include <chrono>
 //#include <Eigen/Dense>
 //#include <opencv2/core/core.hpp>
 //#include <opencv2/highgui/highgui.hpp>
 //#include "opencv2/imgproc/imgproc.hpp"
 //#include <opencv2/core/eigen.hpp>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <vector>
 #include <string>
@@ -35,7 +36,7 @@
 #endif
 using namespace std;
 using namespace cv;
-using namespace std::chrono;
+//using namespace std::chrono;
 
 #define _debugSize(x) cout << "_debugSize: " << #x << " : " << x.size() << endl;
 #define _debug(x) cout << "_debug: " << #x << " : " << x << endl << endl;
@@ -52,7 +53,7 @@ public:
     
     vector<string> files_list;
     vector<Mat> data_image_cv;
-    vector<Mat> data_org_img;
+//    vector<Mat> data_org_img;
     NSMutableArray *imagesArray ;
     int img_num;
     
@@ -150,7 +151,7 @@ public:
         
         for (Mat img:data_image_cv) {
             Mat tmp;
-            resize(img,tmp,cv::Size(scale,scale),INTER_CUBIC);
+            resize(img,tmp,cv::Size(scale,scale), INTER_CUBIC);
             cosalImgs.push_back(tmp);
         }
     }
@@ -183,9 +184,9 @@ public:
         int h=orgSize.height/gridSize;
         for (int i=0; i<img_num; i++) {
             vector<Mat> crop;
-            Mat img = data_org_img[i];
-            //Mat img = data_image_cv[i];
-            string cropFolderWithimg=cropFolder+to_string(i)+"/";
+//            Mat img = data_org_img[i];
+            Mat img = data_image_cv[i];
+//            string cropFolderWithimg=cropFolder+to_string(i)+"/";
 //            struct stat st = {0};
 //            if (stat(cropFolderWithimg.c_str(), &st) == -1) {
 //                cout << "make dir " << cropFolderWithimg << endl;
@@ -195,11 +196,11 @@ public:
                 for (int hh=0; hh< h; hh++) {
                     //if (i==0 && ww==w-1 && hh==h-1)
                     //continue;
-                    stringstream ss;
-                    ss << setw(3) << setfill('0') << ww*h+hh;
-                    string fileName=ss.str();
+//                    stringstream ss;
+//                    ss << setw(3) << setfill('0') << ww*h+hh;
+//                    string fileName=ss.str();
                     crop.push_back(img(cv::Rect(ww*gridSize,hh*gridSize,gridSize,gridSize)));
-                    imwrite(cropFolderWithimg+fileName+".ppm",img(cv::Rect(ww*gridSize,hh*gridSize,gridSize,gridSize)));
+//                    imwrite(cropFolderWithimg+fileName+".ppm",img(cv::Rect(ww*gridSize,hh*gridSize,gridSize,gridSize)));
                 }
             }
             crops.push_back(crop);

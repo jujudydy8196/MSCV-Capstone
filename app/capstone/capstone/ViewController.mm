@@ -34,6 +34,7 @@ AVAssetImageGenerator *imageGenerator = [[AVAssetImageGenerator alloc]initWithAs
 Float64 FPS=1;
 Float64 idx=0;
 vector<Mat> cosalResult;
+Mat cosal;
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -53,16 +54,38 @@ vector<Mat> cosalResult;
     int view_height = (int)(cam_height*self.view.frame.size.width/cam_width);
     int offset = (self.view.frame.size.height - view_height)/2;
     
-    imageView_ = [[UIImageView alloc] initWithFrame:CGRectMake(0.0, offset, view_width, view_height)];
+//    imageView_ = [[UIImageView alloc] initWithFrame:CGRectMake(0.0, offset, view_width, view_height)];
     //[imageView_ setContentMode:UIViewContentModeScaleAspectFill]; (does not work)
-    [self.view addSubview:imageView_]; // Add the view
+//    [self.view addSubview:imageView_]; // Add the view
     
-    cout << self.view.frame.size.width << " " << self.view.frame.size.height << endl;
-    cosalResult = cosaliency();
+//    cout << self.view.frame.size.width << " " << self.view.frame.size.height << endl;
+//    cosalResult = cosaliency();
+    cosal = cosaliency_co();
+    
+    UIImage *resImage = MatToUIImage(cosal*255);
+    NSArray *imgpaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *filePath = [[imgpaths objectAtIndex:0] stringByAppendingPathComponent:@"cosal_co.png"];
+    const char* cPath = [filePath cStringUsingEncoding:NSMacOSRomanStringEncoding];
+    
+    
+    const cv::string newPaths = (const cv::string)cPath;
+    imwrite(newPaths, cosal*255);
+    
+    //        NSString *cname = [framePath stringByAppendingPathComponent:filename];
+    UIImage *cosalImg = [UIImage imageNamed:filePath];
+    CGFloat frameWidth = (self.view.frame.size.width / cosalImg.size.width) * cosalImg.size.width;
+    CGFloat frameHeight = (self.view.frame.size.width / cosalImg.size.width) * cosalImg.size.height;
+//    cout << frameWidth << " " << frameHeight << endl;
+    imageView_ = [[UIImageView alloc] initWithFrame:CGRectMake(0.0, self.view.frame.size.height/2-frameHeight/2, frameWidth, frameHeight)];
+    // Save image.
+    //        [UIImagePNGRepresentation(resImage) writeToFile:filePath atomically:YES];
+    NSLog(filePath);
+    [imageView_ setImage:cosalImg];
+    [self.view addSubview:imageView_];
     cout << "cosal result finish" << endl;
+//    cointerest();
     
     
-//    Config* config = new Config();
     
 //    AVURLAsset *asset = [[AVURLAsset alloc] initWithURL:url options:nil];
 //    AVAssetImageGenerator *generator = [[AVAssetImageGenerator alloc] initWithAsset:asset];
@@ -148,6 +171,7 @@ vector<Mat> cosalResult;
 //    for (int i=0; i<cosalResult.size(); i++) {
     if (idx<cosalResult.size()) {
 //        cout << cosalResult[idx]*255 << endl << endl;
+        cout << idx << endl;
         Mat img=cosalResult[idx];
 //        NSString *cvpath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:[NSString stringWithFormat:@"%03d_cosal.png", idx]];
 //        const char* cPath = [cvpath cStringUsingEncoding:NSMacOSRomanStringEncoding];
@@ -159,21 +183,26 @@ vector<Mat> cosalResult;
 //        cvtColor( img, img, CV_BGR2RGB);
         UIImage *resImage = MatToUIImage(img*255);
         NSArray *imgpaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        NSString *filePath = [[imgpaths objectAtIndex:0] stringByAppendingPathComponent:@"cosal.png"];
+        NSString *filePath = [[imgpaths objectAtIndex:0] stringByAppendingPathComponent:[ NSString stringWithFormat: @"%03f_cosal.png", idx ]];
         const char* cPath = [filePath cStringUsingEncoding:NSMacOSRomanStringEncoding];
+        
 
         const cv::string newPaths = (const cv::string)cPath;
         imwrite(newPaths, img*255);
 
+//        NSString *cname = [framePath stringByAppendingPathComponent:filename];
+        UIImage *cosalImg = [UIImage imageNamed:filePath];
         // Save image.
 //        [UIImagePNGRepresentation(resImage) writeToFile:filePath atomically:YES];
         NSLog(filePath);
-        [imageView_ setImage:resImage];
+        [imageView_ setImage:cosalImg];
         [self.view addSubview:imageView_];
+        
 //        imageView_.image =  [UIImage imageWithCGImage:[resImage CGImage]
 //                                                scale:1.0
 //                                          orientation: UIImageOrientationLeftMirrored];
         idx++;
+        
     }
 //    [videoCamera stop];
 //    if (idx<CMTimeGetSeconds(asset.duration)*FPS) {

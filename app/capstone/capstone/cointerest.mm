@@ -2,63 +2,32 @@
 //  cointerest.m
 //  capstone
 //
-//  Created by Judy Chang on 11/28/16.
+//  Created by Judy Chang on 11/29/16.
 //  Copyright © 2016 Judy Chang. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
+#include "cointerest.h"
 
-#include <iostream>
-#include "cosal_config.h"
-#include <opencv2/nonfree/nonfree.hpp>
-#include <eigen3/Eigen/Dense>
-extern "C" {
-#include <../src/vlfeat/vl/generic.h>
-#include <../src/vlfeat/vl/gmm.h>
-#include <../src/vlfeat/vl/fisher.h>
-}
-using namespace std;
 base* b;
-vector<Mat> db2fv();
-Mat extract_denseSift(const Mat& img);
-PCA learn_gmm(const Mat& feat, VlGMM* &);
-void convVec2Mat(const vector<vector<Mat>>& sift, Mat& feat);
-Mat generate_FV (const vector<Mat> &feat, const VlGMM* gmm, const PCA &pca) ;
-Mat db2cosal() ;
-int findCointerest(const vector<Mat> &FVs, const Mat &cosal, Mat& idx_all);
-void visualize (const Mat& feat_all, const int clusters);
 
-int main() {
-    auto totalstart=high_resolution_clock::now();
-    auto start=high_resolution_clock::now();
+
+void cointerest() {
+
     initModule_nonfree();
     b=new base();
-    auto end=high_resolution_clock::now();
-    _debugTime(start,end,"initialize");
-    start = high_resolution_clock::now();
     b->crop();
-    end = high_resolution_clock::now();
-    _debugTime(start,end,"crop");
-    start = high_resolution_clock::now();
+
     vector<Mat> FVs = db2fv();
-    end = high_resolution_clock::now();
-    _debugTime(start,end,"db2fv");
-    //cout << "FVs len: " << FVs.size() << endl;
-    //_debugSize(FVs[0]);
-    start = high_resolution_clock::now();
-    Mat cosal=db2cosal();
-    end = high_resolution_clock::now();
-    _debugTime(start,end,"db2cosal");
-    Mat idx_all;
-    start = high_resolution_clock::now();
-    int clusters = findCointerest(FVs, cosal,idx_all);
-    end = high_resolution_clock::now();
-    _debugTime(start,end,"findCointerest");
-    cout << clusters << " clusters " << endl;
-    start = high_resolution_clock::now();
-    visualize(idx_all,clusters);
-    end = high_resolution_clock::now();
-    _debugTime(start,end,"visualize");
+    cout << FVs.size() << endl;
+    _debugSize(FVs[0]);
+
+//    Mat cosal=db2cosal();
+//
+//    Mat idx_all;
+//    int clusters = findCointerest(FVs, cosal,idx_all);
+////    cout << clusters << " clusters " << endl;
+//    visualize(idx_all,clusters);
 }
 
 vector<Mat> db2fv() {
@@ -99,7 +68,7 @@ Mat db2cosal() {
         //vector<float> crops;
         for (int i=0; i<w; i++) {
             for (int j=0; j<h; j++ ){
-                Mat crop = im_gray(Rect(i*b->gridSize,j*b->gridSize,b->gridSize,b->gridSize));
+                Mat crop = im_gray(cv::Rect(i*b->gridSize,j*b->gridSize,b->gridSize,b->gridSize));
                 //cout <<"mean: " << mean(crop) << endl;
                 cropss.push_back((float)mean(crop).val[0]);
                 //crops.push_back((float)mean(crop).val[0]);
@@ -123,7 +92,7 @@ int findCointerest(const vector<Mat> &FVs, const Mat &cosal, Mat &idx_all) {
     Mat degree; //, frame_id;
     for (int i=0; i<b->img_num; i++) {
         //frame_id.push_back(Mat(FVs[i].rows,1,CV_8UC1,Scalar(i)));
-        Mat x = feat_all(Rect(0,idx,FVs[i].cols ,FVs[i].rows));
+        Mat x = feat_all(cv::Rect(0,idx,FVs[i].cols ,FVs[i].rows));
         idx += FVs[i].rows;
         //_debugSize(x);
         Mat tmp = x*x.t();
@@ -155,7 +124,7 @@ int findCointerest(const vector<Mat> &FVs, const Mat &cosal, Mat &idx_all) {
         // TODO: eigen faster, get only 2
         eigen(M, eig, evec);
         //_debugSize(evec);
-        evec(Rect(0,0,evec.cols,2)).copyTo(evec);
+        evec(cv::Rect(0,0,evec.cols,2)).copyTo(evec);
         //_debugSize(evec);
         evec = feat_all * evec.t();
         //_debugSize(evec);
