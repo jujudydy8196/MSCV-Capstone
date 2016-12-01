@@ -23,7 +23,9 @@ using namespace cv;
     UIImageView *imageView_; // Setup the image view
     UIImageView *recordingView_;
     UITextView *fpsView_; // Display the current FPS
-    UITextView *touchView_; // Display the current FPS
+    UITextView *touchView_;
+    UITextView *processView_;
+    UIActivityIndicatorView *activityView_;
 
 //    vector<Mat> data_image_cv;
 //    vector<Mat> data_org_img;
@@ -50,6 +52,7 @@ bool start=false;
     [super viewDidLoad];
     UITapGestureRecognizer *gr = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleGesture:)];
     [self.view addGestureRecognizer:gr];
+    [self.view setBackgroundColor:[UIColor grayColor]];
     // Initialize the view
     // Hacky way to initialize the view to ensure the aspect ratio looks correct
     // across all devices. Unfortunately, setting UIViewContentModeScaleAspectFill
@@ -72,9 +75,19 @@ bool start=false;
     CGFloat frameHeight = (self.view.frame.size.width / (cam_width*10)) * cam_height;
     //    cout << frameWidth << " " << frameHeight << endl;
     imageView_ = [[UIImageView alloc] initWithFrame:CGRectMake(0.0, self.view.frame.size.height/2-frameHeight/2, frameWidth, frameHeight)];
-    imageView_.hidden=true;
+//    [imageView_ setBackgroundColor:[UIColor grayColor]];
+//    [self.view addSubview:imageView_];
+//    imageView_.hidden=true;
     
     set = new cosal_config();
+    
+    activityView_ = [[UIActivityIndicatorView alloc]
+                     initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    
+    activityView_.center=self.view.center;
+//    [activityView_ startAnimating];
+    [self.view addSubview:activityView_];
+    activityView_.hidden=true;
     
 //    cout << self.view.frame.size.width << " " << self.view.frame.size.height << endl;
 //    cosalResult = cosaliency();
@@ -170,7 +183,17 @@ bool start=false;
     touchView_.text = touch_NSStr;
 
     [touchView_ setContentOffset:CGPointMake(-60, 0) animated:NO];
-
+    
+    
+    processView_ = [[UITextView alloc] initWithFrame:CGRectMake(view_width/2-view_width/4,view_height/2,view_width/2,std::max(offset,35))];
+    [processView_ setOpaque:true];
+    [processView_ setTextColor:[UIColor blueColor]];
+    [processView_ setFont:[UIFont fontWithName:@"AmericanTypewriter-Bold" size:50]];
+    processView_.hidden=true;
+    [self.view addSubview:processView_];
+    NSString *process_NSStr = @"Processing";
+    processView_.text = process_NSStr;
+    
     
     [videoCamera start];
     
@@ -291,26 +314,41 @@ bool start=false;
         cout << idx << endl;
     }
     if (idx==10*FPS) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [processView_ setHidden:false];
+            [touchView_ setHidden:true];
+            [recordingView_ setHidden:true];
+//            [imageView_ setHidden:false];
+            [activityView_ setHidden:false];
+            [activityView_ startAnimating];
+        });
+//        processView_.hidden=NO;
+//        recordingView_.hidden = YES;
+        
+        
+        
+        [videoCamera stop];
+        
+        
         set->orgSize=image.size();
         cout << set->orgSize << endl;
         set->img_num = set->data_image_cv.size();//[imagesArray count];
         cout << set->img_num << endl;
         cosal = cosaliency_recording(set);
-        UIImage *resImage = MatToUIImage(cosal*255);
+//        UIImage *resImage = MatToUIImage(cosal*255);
+        
+        // saving cosalient result
         NSArray *imgpaths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
         NSString *filePath = [[imgpaths objectAtIndex:0] stringByAppendingPathComponent:@"cosal_co.png"];
         const char* cPath = [filePath cStringUsingEncoding:NSMacOSRomanStringEncoding];
-    
-    
         const cv::string newPaths = (const cv::string)cPath;
         imwrite(newPaths, cosal*255);
     
-        //        NSString *cname = [framePath stringByAppendingPathComponent:filename];
         UIImage *cosalImg = [UIImage imageNamed:filePath];
-        cout << "cosalImg.size: " << cosalImg.size.width << "x" << cosalImg.size.height << endl;
+        
+        
+//        cout << "cosalImg.size: " << cosalImg.size.width << "x" << cosalImg.size.height << endl;
 
-        // Save image.
-        //        [UIImagePNGRepresentation(resImage) writeToFile:filePath atomically:YES];
         NSLog(filePath);
         [imageView_ setImage:cosalImg];
 
@@ -320,9 +358,7 @@ bool start=false;
 //    }ll
 //        cosaliency();
 //    if (idx==15*FPS) {
-        [videoCamera stop];
-        recordingView_.hidden = true;
-        imageView_.hidden = false;
+        
         
         NSString *result_NSStr = @"cosaliency result";
         // Have to do this so as to communicate with the main thread
@@ -333,10 +369,12 @@ bool start=false;
             
         });
 //        touchView_.text = result_NSS/tr;
+        [self.view setBackgroundColor:[UIColor whiteColor]];
         [self.view addSubview:imageView_];
     }
     idx++;
     }
+    
 }
 
 @end
