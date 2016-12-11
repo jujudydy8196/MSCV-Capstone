@@ -5,7 +5,7 @@
 3. Assisting visually impaired people using social network
 
 ## Presentation Slides
-[Link] (https://youtu.be/m-GVFXR-EHw)
+[Demo and Slides] (https://youtu.be/m-GVFXR-EHw)
 
 ## Compile
 Test C++ code on Mac OSX El Capitan
@@ -13,3 +13,10 @@ Test C++ code on Mac OSX El Capitan
 cd c
 make
 ```
+
+## Run
+```
+./project.sh
+```
+
+
